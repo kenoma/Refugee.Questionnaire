@@ -1,27 +1,27 @@
 ﻿using Prometheus;
-using Serilog;
 
-namespace CvLab.TelegramBot.Service;
+namespace RQ.Bot.Service;
 
 internal class PrometheusHost : IHostedService
 {
     private readonly IMetricServer _metricServer;
-    private readonly Serilog.ILogger _logger = Log.ForContext<PrometheusHost>();
+    private readonly ILogger<PrometheusHost> _logger;
 
     /// <summary>
     ///     Creates application host from container
     /// </summary>
     /// <param name="metricServer"></param>
     /// <param name="logger"></param>
-    public PrometheusHost(IMetricServer metricServer)
+    public PrometheusHost(IMetricServer metricServer, ILogger<PrometheusHost> logger)
     {
         _metricServer = metricServer ?? throw new ArgumentNullException(nameof(metricServer));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _metricServer.Start();
-        _logger.Information("Prometheus host started");
+        _logger.LogInformation("Prometheus host started");
 
         return Task.CompletedTask;
     }
@@ -32,6 +32,6 @@ internal class PrometheusHost : IHostedService
             .StopAsync()
             .ConfigureAwait(false);
 
-        _logger.Information("Prometheus host stopped");
+        _logger.LogInformation("Prometheus host stopped");
     }
 }

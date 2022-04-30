@@ -1,25 +1,19 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using CvLab.TelegramBot.Misc;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
+﻿using Microsoft.AspNetCore.Mvc;
 
-using Serilog;
-
-using Telegram.Bot.Types;
-
-namespace CvLab.TelegramBot.Controllers
+namespace RQ.Bot.Controllers
 {
     /// <inheritdoc />
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api")]
     [Produces("application/json")]
     public class QuestionariesArchiveController : Controller
     {
-        
+        private readonly ILogger<QuestionariesArchiveController> _logger;
+
         /// <inheritdoc />
-        public QuestionariesArchiveController()
+        public QuestionariesArchiveController(ILogger<QuestionariesArchiveController> logger)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -33,6 +27,7 @@ namespace CvLab.TelegramBot.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetRecords()
         {
+            _logger.LogTrace("Someone requested {Method}", nameof(GetRecords));
             if (!(HttpContext?.Request?.Headers?.TryGetValue("X-Gitlab-Token", out var token) ?? false))
             {
                 return BadRequest();

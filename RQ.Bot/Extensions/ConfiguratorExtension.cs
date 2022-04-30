@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-
-using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
+﻿using System.Reflection;
 
 namespace RQ.Bot.Extensions;
 
@@ -11,31 +7,31 @@ namespace RQ.Bot.Extensions;
 /// </summary>
 public static class ConfiguratorExtension
 {
-    public static IHostBuilder Configure(this IHostBuilder builder, params string[] args) => builder.ConfigureAppConfiguration(configurationBuilder =>
+    public static WebApplicationBuilder Configure(this WebApplicationBuilder builder, params string[] args)
+    {
+        builder.Host.ConfigureAppConfiguration(configurationBuilder =>
         {
             configurationBuilder.AddCommandLine(args);
             configurationBuilder.AddEnvironmentVariables();
-            var config = configurationBuilder.Build();
-
-            var consulAddress = config["consulAddress"];
-
-            if (string.IsNullOrEmpty(consulAddress))
-                consulAddress = "http://localhost:8500";
-
-            var consulToken = config["consulToken"];
-
-            var configName = config["configName"];
-
-            if (string.IsNullOrEmpty(configName))
-                configName = "default";
-            
-        })
-        .UseSerilog((ctx, logCfg) =>
-        {
-            //var logSection = ctx.Configuration["loggerSection"] ?? LoggerConvention.DefaultSection;
-
-            logCfg//.ReadFrom.Configuration(ctx.Configuration)
-                .WriteTo.Console(theme: AnsiConsoleTheme.Code).MinimumLevel.Verbose();
-
         });
+            
+        // builder.Host.UseSerilog((ctx, logCfg) =>
+        // {
+        //     //var logSection = ctx.Configuration["loggerSection"] ?? LoggerConvention.DefaultSection;
+        //
+        //     logCfg //.ReadFrom.Configuration(ctx.Configuration)
+        //         .WriteTo.Console(theme: AnsiConsoleTheme.Code).MinimumLevel.Verbose();
+        //
+        // });
+        
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+        });
+        
+        return builder;
+    }
 }

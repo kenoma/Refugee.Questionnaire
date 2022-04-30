@@ -1,4 +1,4 @@
-﻿namespace Refugee.Questionnaire.DTO;
+﻿namespace RQ.DTO;
 
 public class ChatConfiguration
 {

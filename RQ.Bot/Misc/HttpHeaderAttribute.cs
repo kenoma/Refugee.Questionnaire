@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 
-namespace CvLab.TelegramBot.Misc;
+namespace Bot.Misc;
 
 /// <inheritdoc cref="System.Attribute" />
 public class HttpHeaderAttribute : Attribute, IActionConstraint

@@ -1,6 +1,8 @@
-﻿namespace CvLab.TelegramBot.Repo;
+﻿using RQ.DTO;
+
+namespace Bot.Repo;
 
 public interface IRepository
 {
-    
+    bool TryGetChatData(long chatId, out ChatConfiguration o);
 }

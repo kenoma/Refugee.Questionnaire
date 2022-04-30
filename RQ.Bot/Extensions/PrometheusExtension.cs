@@ -1,12 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using CvLab.TelegramBot.Service;
-
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-using Prometheus;
+﻿using Prometheus;
+using RQ.Bot.Service;
 
 namespace RQ.Bot.Extensions;
 
@@ -17,15 +10,19 @@ public static class PrometheusExtension
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static IHostBuilder UsePrometheus(this IHostBuilder builder) => builder.ConfigureServices((context, services)  =>
+    public static WebApplicationBuilder UsePrometheus(this WebApplicationBuilder builder)
     {
-        var prometheusPort = context.Configuration["prometheusPort"];
+        builder.Host.ConfigureServices((context, services) =>
+        {
+            var prometheusPort = context.Configuration["prometheusPort"];
 
-        if (!int.TryParse(prometheusPort, out var port))
-            throw new InvalidProgramException("Specify --prometheusPort argument");
+            if (!int.TryParse(prometheusPort, out var port))
+                throw new InvalidProgramException("Specify --prometheusPort argument");
 
-        services.AddSingleton<IMetricServer>(_ => new MetricServer(port));
+            services.AddSingleton<IMetricServer>(_ => new MetricServer(port));
 
-        services.AddHostedService<PrometheusHost>();
-    });
+            services.AddHostedService<PrometheusHost>();
+        });
+        return builder;
+    }
 }
