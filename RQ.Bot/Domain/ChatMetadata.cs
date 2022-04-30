@@ -1,6 +1,6 @@
 ﻿namespace RQ.DTO;
 
-public class ChatConfiguration
+public class ChatMetadata
 {
     public long ChatId { get; set; }
 }

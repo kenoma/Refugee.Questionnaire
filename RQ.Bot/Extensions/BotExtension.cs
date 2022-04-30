@@ -20,7 +20,8 @@ public static class BotExtension
                 return new TelegramBotClient(botToken);
             })
             .AddTransient<IUpdateHandler, BotLogic>()
-            .AddTransient<EntryConfigureChat>();
+            .AddTransient<EntryAdmin>()
+            .AddTransient<EntryQuestionnaire>();
 
         builder.Host.ConfigureServices((_, services) =>
         {

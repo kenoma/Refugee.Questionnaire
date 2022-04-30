@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Bot.Misc;
+using Bot.Repo;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RQ.Bot.Controllers
 {
@@ -8,11 +10,13 @@ namespace RQ.Bot.Controllers
     [Produces("application/json")]
     public class QuestionariesArchiveController : Controller
     {
+        private readonly IRepository _repo;
         private readonly ILogger<QuestionariesArchiveController> _logger;
 
         /// <inheritdoc />
-        public QuestionariesArchiveController(ILogger<QuestionariesArchiveController> logger)
+        public QuestionariesArchiveController(IRepository repo, ILogger<QuestionariesArchiveController> logger)
         {
+            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -22,18 +26,26 @@ namespace RQ.Bot.Controllers
         /// <returns></returns>
         /// <response code="200">Список анкет воз</response>
         /// <response code="401">Не передан токен для доступа</response>
-        [HttpGet("recs")]//HttpHeader("X-Gitlab-Event", "Push Hook")
+        [HttpGet("recs"), HttpHeader("X-Volunteer-Token", "----")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetRecords()
         {
-            _logger.LogTrace("Someone requested {Method}", nameof(GetRecords));
-            if (!(HttpContext?.Request?.Headers?.TryGetValue("X-Gitlab-Token", out var token) ?? false))
+            if (!(HttpContext?.Request?.Headers?.TryGetValue("X-Volunteer-Token", out var token) ?? false))
             {
-                return BadRequest();
+                return Unauthorized();
+            }
+
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecords), token);
+            
+            if (!_repo.IsKnownToken(token))
+            {
+                return Unauthorized();
             }
             
-            return Ok();
+            var records = _repo.GetAllQuestionaries();
+
+            return Ok(records);
         }
     }
 }

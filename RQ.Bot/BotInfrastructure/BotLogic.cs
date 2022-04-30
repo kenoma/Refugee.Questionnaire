@@ -13,46 +13,47 @@ namespace RQ.Bot.BotInfrastructure
     internal class BotLogic : IUpdateHandler
     {
         private readonly TelegramBotClient _bot;
-        private readonly EntryConfigureChat _entryConfigureChat;
+        private readonly EntryAdmin _entryAdmin;
+        private readonly EntryQuestionnaire _entryQuestionnaire;
         private readonly ILogger<BotLogic> _logger;
 
-        private static readonly Counter _commandsCount =
+        private static readonly Counter CommandsCount =
             Metrics.CreateCounter("commands_total", "Количество команд, отработанных ботом");
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="botClient"></param>
-        /// <param name="entryProjectsAndMilestoneSelect"></param>
-        /// <param name="entryConfigureChat"></param>
-        /// <param name="entryIssues"></param>
-        /// <param name="entryIssueCreate"></param>
-        /// <param name="reportPublisher"></param>
+        /// <param name="entryAdmin"></param>
+        /// <param name="entryQuestionnaire"></param>
         /// <param name="logger"></param>
         public BotLogic(
             TelegramBotClient botClient,
-            EntryConfigureChat entryConfigureChat,
+            EntryAdmin entryAdmin,
+            EntryQuestionnaire entryQuestionnaire,
             ILogger<BotLogic> logger
         )
         {
             _bot = botClient ?? throw new ArgumentNullException(nameof(botClient));
-            _entryConfigureChat = entryConfigureChat ?? throw new ArgumentNullException(nameof(entryConfigureChat));
+            _entryAdmin = entryAdmin ?? throw new ArgumentNullException(nameof(entryAdmin));
+            _entryQuestionnaire = entryQuestionnaire ?? throw new ArgumentNullException(nameof(entryQuestionnaire));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <inheritdoc />
-        public async Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var handler = update.Type switch
                 {
-                    UpdateType.Message => BotOnMessageReceived(update.Message),
-                    UpdateType.EditedMessage => BotOnMessageReceived(update.Message),
-                    UpdateType.CallbackQuery => BotOnCallbackQueryReceived(update.CallbackQuery),
-                    UpdateType.InlineQuery => BotOnInlineQueryReceived(update.InlineQuery),
-                    UpdateType.ChosenInlineResult => BotOnChosenInlineResultReceived(update.ChosenInlineResult),
-                    UpdateType.PollAnswer => BotOnPollAnswer(update.PollAnswer),
+                    UpdateType.Message => BotOnMessageReceived(update.Message!),
+                    UpdateType.EditedMessage => BotOnMessageReceived(update.Message!),
+                    UpdateType.CallbackQuery => BotOnCallbackQueryReceived(update.CallbackQuery!),
+                    UpdateType.InlineQuery => BotOnInlineQueryReceived(update.InlineQuery!),
+                    UpdateType.ChosenInlineResult => BotOnChosenInlineResultReceived(update.ChosenInlineResult!),
+                    UpdateType.PollAnswer => BotOnPollAnswer(update.PollAnswer!),
                     // UpdateType.Unknown:
                     // UpdateType.ChannelPost:
                     // UpdateType.EditedChannelPost:
@@ -63,88 +64,33 @@ namespace RQ.Bot.BotInfrastructure
                 };
 
                 await handler;
-                _commandsCount.Inc();
+                CommandsCount.Inc();
             }
             catch (Exception exception)
             {
-                await HandleError(botClient, exception, cancellationToken);
+                await HandleErrorAsync(botClient, exception, cancellationToken);
             }
         }
 
-        private async Task BotOnPollAnswer(PollAnswer updatePollAnswer)
+        private Task BotOnPollAnswer(PollAnswer updatePollAnswer)
         {
             _logger.LogInformation("New vote {@Vote}", updatePollAnswer);
-        }
-
-        /// <inheritdoc />
-        public Task HandleError(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-        {
-            var errorMessage = exception switch
-            {
-                ApiRequestException apiRequestException =>
-                    $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-                _ => exception.ToString()
-            };
-
-            _logger.LogError("Bot error {ErrorMessage}", errorMessage);
-
             return Task.CompletedTask;
         }
 
-        /// <inheritdoc />
-        public UpdateType[]? AllowedUpdates { get; }
-
-        private async Task BotOnMessageReceived(Message message)
+        private async Task BotOnMessageReceived(Message? message)
         {
+            if (message == null)
+                return;
+
             var user = message.From;
+            if (user == null)
+                return;
+
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
 
-            if (chatMember.Status != ChatMemberStatus.Administrator && chatMember.Status != ChatMemberStatus.Creator)
-            {
-                var r = new Random(Environment.TickCount);
-                string[] a1 =
-                {
-                    "Товарищ!", "С другой стороны ", "Равным образом ", "Не следует, однако, забыть, что ",
-                    "Таким образом ", "Повседневная практика показыват, что ",
-                    "Значимость этих проблем настолько очевидная, что ", "Разнообразный и богатый опыт ",
-                    "Задача организации, в особенности же ", "Идейные соображения высокого порядка, а также "
-                };
-                string[] a2 =
-                {
-                    "реализация намеченных плановых заданий ", "рамки и место обучения кадров ",
-                    "постоянный количественный рост и сфера нашей активности ", "сложившаеся структура организации ",
-                    "новая модель организационной деятельности ", "дальнейшее развитие различных форм деятельности ",
-                    "постоянное информационно-пропагандисткое обеспечение нашей деятельности ",
-                    "управление и развитие структуры ", "консультация с широким активом ",
-                    "начало повседневной работы по формированию позиции"
-                };
-                string[] a3 =
-                {
-                    "играет важную роль в формировании ", "требует от наc анализа ", "требует определения и уточнения ",
-                    "способствует подготовке и реализации ", "обеспечивает широкому кругу ", "участие в формировании ",
-                    "в значительной степени обуславливает создание ",
-                    "позволяет оценить значение, представляет собой интересный эксперимент ",
-                    "позволяет выполнять разные задачи ",
-                    "проверки влечет за собой интересный процесс внедрения и модернизации"
-                };
-                string[] a4 =
-                {
-                    "существующим финансовых и административных условий.", "дальнейших направлений развития.",
-                    "системы массового участия.", "позиций, занимаемых участниками в отношении поставленных задач.",
-                    "новых предложений.", "направлений прогрессивного развития.",
-                    "системы обучения кадров, соответствующей насущным потребностям.",
-                    "соответствующих условий активизации.", "модели развития.", "форм воздействия."
-                };
-
-                await _bot.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text:
-                    $"@{user.Username}! {(a1[r.Next(a1.Length)]) + (a2[r.Next(a2.Length)]) + (a3[r.Next(a3.Length)]) + (a4[r.Next(a4.Length)])}");
-
-                return;
-            }
-
-            _logger.LogInformation("Receive message type: {MessageType}: {MessageText}", message.Type, message.Text);
+            _logger.LogInformation("Receive message type: {MessageType}: {MessageText} from {Member}", message.Type,
+                message.Text, chatMember.User.Username);
 
             if (message.Type != MessageType.Text)
                 return;
@@ -160,33 +106,39 @@ namespace RQ.Bot.BotInfrastructure
                 if (message.Entities[entity].Type != MessageEntityType.BotCommand)
                     continue;
 
-                _logger.LogInformation("Recognized bot command: {Command}", message.EntityValues.ElementAt(entity));
+                _logger.LogInformation("Recognized bot command: {Command}", message.EntityValues!.ElementAt(entity));
 
-                var action = (message.EntityValues.ElementAt(entity)
+                var action = (message.EntityValues!.ElementAt(entity)
                         .Split(new[] { " ", "@" }, StringSplitOptions.RemoveEmptyEntries).First()) switch
                     {
-                        "/s" => _entryConfigureChat.SendConfiguration(message),
+                        "/admin" => _entryAdmin.StartLaborAsync(message.Chat!, user),
+                        "/request" => _entryQuestionnaire.StartQuestionnaire(user),
                         _ => Usage(message)
                     };
 
                 await action;
 
-                async Task Usage(Message msg)
+                async Task Usage(Message? msg)
                 {
-                    const string usage = "*Что мы с тобой можем сделать:*\r\n" +
-                                         "/p - Выбор майлстоуна\r\n" +
-                                         "/i - Выбор задачи для голосования\r\n" +
-                                         "/s <host|token> <text> - Конфигурация бота\r\n" +
-                                         "/o <text> - Создать новое ишью\r\n" +
-                                         "/c - Выгрузить список задач по текущему спринту в csv\r\n" +
-                                         "/r - Отчет по спринту";
+                    if (msg == null)
+                        return;
 
+                    const string usage = "*Доступные команды:*\r\n" +
+                                         "/admin - Доступ к административным функциям\r\n" +
+                                         "/request - Заполнение новой анкеты\r\n";
+
+                    var inlineKeyboard = new InlineKeyboardMarkup(new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("Административные функции", BotResponce.Create("admin")),
+                        InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("request")),
+                    });
 
                     await _bot.SendTextMessageAsync(
                         chatId: msg.Chat.Id,
                         parseMode: ParseMode.Markdown,
                         text: usage,
-                        replyMarkup: new ReplyKeyboardRemove()
+                        replyMarkup: inlineKeyboard,
+                        disableWebPagePreview: false
                     );
                 }
             }
@@ -198,76 +150,34 @@ namespace RQ.Bot.BotInfrastructure
             try
             {
                 var user = callbackQuery.From;
-                var chatMember = await _bot.GetChatMemberAsync(callbackQuery.Message.Chat.Id, user.Id);
 
-                if (chatMember.Status != ChatMemberStatus.Administrator &&
-                    chatMember.Status != ChatMemberStatus.Creator)
-                {
-                    await _bot.SendTextMessageAsync(
-                        chatId: callbackQuery.Message.Chat.Id,
-                        text: $"@{user.Username} не хулигань!");
-
-                    return;
-                }
-
-                var responce = BotResponce.FromString(callbackQuery.Data);
+                var responce = BotResponce.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {@Callback}", responce);
 
                 switch (responce.Entry)
                 {
-                    case "project":
-                        //await _entryProjectsAndMilestoneSelect.ProcessProjectResponceAsync(callbackQuery, responce);
+                    case "admin":
+                        await _entryAdmin.StartLaborAsync(callbackQuery.Message?.Chat!, user);
 
                         break;
 
-                    case "milestone":
-                        //await _entryProjectsAndMilestoneSelect.ProcessMilestoneResponceAsync(callbackQuery, responce);
-
-                        break;
-
-                    case "issues":
-                        //await _entryIssues.SelectIssueToVote(callbackQuery.Message);
-
-                        break;
-
-                    case "issue":
-                        //await _entryIssues.ProcessIssue(callbackQuery, responce);
-
-                        break;
-
-                    case "vote":
-                        //await _entryIssues.StopVote(callbackQuery, responce);
+                    case "request":
+                        await _entryQuestionnaire.StartQuestionnaire(user);
 
                         break;
                 }
             }
             catch (Exception e)
             {
-                await HandleError(_bot, e, CancellationToken.None);
+                await HandleErrorAsync(_bot, e, CancellationToken.None);
             }
         }
 
-        private async Task BotOnInlineQueryReceived(InlineQuery inlineQuery)
+        private Task BotOnInlineQueryReceived(InlineQuery inlineQuery)
         {
-            _logger.LogInformation($"Received inline query from: {inlineQuery.From.Id}");
-
-            // InlineQueryResultBase[] results =
-            // {
-            //     // displayed result
-            //     new InlineQueryResultArticle(
-            //         id: "3",
-            //         title: "TgBots",
-            //         inputMessageContent: new InputTextMessageContent("hello")
-            //     )
-            // };
-            //
-            // await _bot.AnswerInlineQueryAsync(
-            //     inlineQuery.Id,
-            //     results,
-            //     isPersonal: true,
-            //     cacheTime: 0
-            // );
+            _logger.LogInformation("Received inline query from: {InlineQueryFromId}", inlineQuery.From.Id);
+            return Task.CompletedTask;
         }
 
         private Task BotOnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult)
@@ -282,15 +192,19 @@ namespace RQ.Bot.BotInfrastructure
             return Task.CompletedTask;
         }
 
-        public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception,
             CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var errorMessage = exception switch
+            {
+                ApiRequestException apiRequestException =>
+                    $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                _ => exception.ToString()
+            };
+
+            _logger.LogError(exception, "Bot error {ErrorMessage}", errorMessage);
+
+            return Task.CompletedTask;
         }
     }
 }
