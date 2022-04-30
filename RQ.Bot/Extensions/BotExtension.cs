@@ -1,4 +1,5 @@
 ﻿using RQ.Bot.BotInfrastructure;
+using RQ.Bot.BotInfrastructure.Entry;
 using RQ.Bot.Service;
 using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
@@ -18,7 +19,8 @@ public static class BotExtension
 
                 return new TelegramBotClient(botToken);
             })
-            .AddTransient<IUpdateHandler, BotLogic>();
+            .AddTransient<IUpdateHandler, BotLogic>()
+            .AddTransient<EntryConfigureChat>();
 
         builder.Host.ConfigureServices((_, services) =>
         {

@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Bot.Repo;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -7,18 +7,18 @@ namespace RQ.Bot.Extensions;
 
 internal static class LiteDbBuilderExtensions
 {
-    public static WebApplicationBuilder UseLiteDBDatabase(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder UseLiteDbDatabase(this WebApplicationBuilder builder)
     {
-        // return builder.ConfigureServices(collection =>
-        // {
-        //     // collection
-        //     //     .AddSingleton(provider =>
-        //     //     {
-        //     //
-        //     //         throw new InvalidOperationException("Fatal - mongodb service address is not resolved");
-        //     //
-        //     //     });
-        // });
+        builder.Host.ConfigureServices((context, services) =>
+        {
+            var dbPath = context.Configuration["dbPath"];
+
+            if (string.IsNullOrWhiteSpace(dbPath))
+                throw new InvalidProgramException("Specify --dbPath argument");
+
+            services.AddTransient<IRepository>(_ => new LiteDbRepo(dbPath));
+
+        });
         return builder;
     }
 }
