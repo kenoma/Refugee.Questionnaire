@@ -5,8 +5,11 @@ namespace Bot.Repo;
 
 public interface IRepository
 {
-    bool TryGetChatData(long chatId, out ChatMetadata chatConfig);
     bool IsKnownToken(string value);
     bool IsKnownTgUser(long userId);
-    Questionnaire[] GetAllQuestionaries();
+    RefRequest[] GetAllRequest();
+    RefRequest[] GetAllRequestFromUser(long userId);
+    RefRequest GetRequest(Guid requestId);
+    void UpdateRefRequest(RefRequest request);
+    bool TryGetActiveUserRequest(long userId, out RefRequest refRequest);
 }

@@ -5,7 +5,8 @@ var builder = WebApplication
     .Configure(args)
     .UsePrometheus()
     .UseLiteDbDatabase()
-    .UseTelegramBot();
+    .UseTelegramBot()
+    .UseQuestionnaire();
 
 var app = builder.Build();
 

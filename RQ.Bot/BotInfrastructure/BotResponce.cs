@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Web;
+using Newtonsoft.Json;
 
 namespace RQ.Bot.BotInfrastructure.Entry;
 
@@ -6,9 +7,7 @@ internal class BotResponce
 {
     public string Entry { get; set; } = string.Empty;
 
-    public long Id { get; set; }
-
-    public string Payload { get; set; }
+    public string Id { get; set; }
 
 
     public static string Create(string entry)
@@ -16,14 +15,9 @@ internal class BotResponce
         return JsonConvert.SerializeObject(new BotResponce { Entry = entry});
     }
 
-    public static string Create(string entry, int id, string payload)
+    public static string Create(string entry, Guid id)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = id, Payload = payload });
-    }
-
-    public static string Create(string entry, long id, string payload)
-    {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = id, Payload = payload });
+        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = id.ToString("N")});
     }
 
     public static BotResponce FromString(string callbackQueryData)

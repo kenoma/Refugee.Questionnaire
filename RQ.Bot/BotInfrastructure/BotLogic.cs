@@ -95,7 +95,7 @@ namespace RQ.Bot.BotInfrastructure
             if (message.Type != MessageType.Text)
                 return;
 
-            if (string.IsNullOrEmpty(message.Text))
+            if (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text))
                 return;
 
             if (message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true)
@@ -112,7 +112,7 @@ namespace RQ.Bot.BotInfrastructure
                         .Split(new[] { " ", "@" }, StringSplitOptions.RemoveEmptyEntries).First()) switch
                     {
                         "/admin" => _entryAdmin.StartLaborAsync(message.Chat!, user),
-                        "/request" => _entryQuestionnaire.StartQuestionnaire(user),
+                        "/request" => _entryQuestionnaire.StartQuestionnaireAsync(message.Chat!, user),
                         _ => Usage(message)
                     };
 
@@ -163,7 +163,23 @@ namespace RQ.Bot.BotInfrastructure
                         break;
 
                     case "request":
-                        await _entryQuestionnaire.StartQuestionnaire(user);
+                        await _entryQuestionnaire.StartQuestionnaireAsync(callbackQuery.Message?.Chat!, user);
+
+                        break;
+                        
+                    case "all_user_queries":
+                        await _entryQuestionnaire.GetUserRefRequestAsync(callbackQuery.Message?.Chat!, user);
+
+                        break;
+                        
+                    case "fill_request":
+                        await _entryQuestionnaire.FillLatestRequest(callbackQuery.Message?.Chat!, user);
+
+                        break;
+                        
+                    case "auq":
+                        await _entryQuestionnaire.ShowArchiveRequest(callbackQuery.Message?.Chat!, user,
+                            Guid.Parse(responce.Id));
 
                         break;
                 }

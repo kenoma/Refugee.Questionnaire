@@ -11,20 +11,7 @@ public class LiteDbRepo : IRepository
     {
         _dbPath = dbPath ?? throw new ArgumentNullException(nameof(dbPath));
     }
-
-    public bool TryGetChatData(long chatId, out ChatMetadata chatConfig)
-    {
-        using var db = new LiteDatabase(_dbPath);
-
-        var collection = db.GetCollection<ChatMetadata>(nameof(ChatMetadata));
-
-        collection.EnsureIndex(x => x.ChatId, unique: true);
-
-        chatConfig = collection.FindOne(z => z.ChatId == chatId);
-
-        return chatConfig != null;
-    }
-
+    
     public bool IsKnownToken(string value)
     {
         using var db = new LiteDatabase(_dbPath);
@@ -47,12 +34,53 @@ public class LiteDbRepo : IRepository
         return collection.FindOne(z => z.UserId == userId) != null;
     }
 
-    public Questionnaire[] GetAllQuestionaries()
+    public RefRequest[] GetAllRequest()
     {
         using var db = new LiteDatabase(_dbPath);
 
-        var collection = db.GetCollection<Questionnaire>(nameof(Questionnaire));
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
 
         return collection.FindAll().ToArray();
+    }
+
+    public RefRequest[] GetAllRequestFromUser(long userId)
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+        collection.EnsureIndex(z => z.UserId);
+
+        return collection.Find(z => z.UserId == userId).ToArray();
+    }
+
+    public RefRequest GetRequest(Guid requestId)
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+        collection.EnsureIndex(z => z.Id);
+
+        return collection.FindOne(z => z.Id == requestId);
+    }
+
+    public void UpdateRefRequest(RefRequest request)
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+        collection.EnsureIndex(z => z.Id);
+
+        collection.Upsert(request);
+    }
+
+    public bool TryGetActiveUserRequest(long userId, out RefRequest refRequest)
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+        collection.EnsureIndex(z => z.Id);
+
+        refRequest = collection.FindOne(z => !z.IsCompleted);
+        return refRequest != null;
     }
 }

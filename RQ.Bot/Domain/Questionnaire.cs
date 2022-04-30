@@ -2,5 +2,5 @@
 
 public class Questionnaire
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public QuestionnaireEntry[] Entries { get; set; } = Array.Empty<QuestionnaireEntry>();
 }
