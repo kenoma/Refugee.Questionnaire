@@ -1,0 +1,15 @@
+stages:
+  - build
+
+Refugee.Questionnaire.Build:
+  stage: build
+  artifacts:
+    untracked: false
+    when: on_success
+    paths:
+      - Deployment
+    name: "$env:CI_JOB_STAGE_$env:CI_COMMIT_REF_NAME"
+    expire_in: 2 day  
+  script:
+  - 'dotnet publish Refugee.Questionnaire.csproj -c Release -r win-x64 -o Deployment/win64'
+  - 'dotnet publish Refugee.Questionnaire.csproj -c Release -r linux-x64 -o Deployment/linux64'
