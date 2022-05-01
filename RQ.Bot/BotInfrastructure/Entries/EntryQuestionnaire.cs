@@ -22,7 +22,7 @@ public class EntryQuestionnaire
         _questionnaire = questionnaire ?? throw new ArgumentNullException(nameof(questionnaire));
     }
 
-    public async Task StartQuestionnaireAsync(ChatId? chatId, User? user)
+    public async Task StartQuestionnaireAsync(ChatId chatId, User user)
     {
         if (user == null)
             return;
@@ -30,7 +30,7 @@ public class EntryQuestionnaire
         if (chatId == null)
             return;
 
-        var inlineKeyboard = new InlineKeyboardMarkup(new InlineKeyboardButton[][]
+        var inlineKeyboard = new InlineKeyboardMarkup(new[]
         {
             new[]
             {
@@ -52,7 +52,7 @@ public class EntryQuestionnaire
         );
     }
 
-    public async Task GetUserRefRequestAsync(Chat? chatId, User? user)
+    public async Task GetUserRefRequestAsync(Chat chatId, User user)
     {
         if (user == null)
             return;
@@ -105,7 +105,7 @@ public class EntryQuestionnaire
         );
     }
 
-    public async Task ShowArchiveRequest(Chat? chatId, User? user, Guid requestId)
+    public async Task ShowArchiveRequest(Chat chatId, User user, Guid requestId)
     {
         if (user == null)
             return;

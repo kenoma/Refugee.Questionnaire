@@ -11,5 +11,5 @@ Refugee.Questionnaire.Build:
     name: "$env:CI_JOB_STAGE_$env:CI_COMMIT_REF_NAME"
     expire_in: 2 day  
   script:
-  - 'dotnet publish RQ.Bot/RQ.Bot.csproj -c Release -r win-x64 -o Deployment/win64'
-  - 'dotnet publish RQ.Bot/RQ.Bot.csproj -c Release -r linux-x64 -o Deployment/linux64'
+  - 'dotnet publish RQ.Bot/RQ.Bot.csproj -c Release --self-contained -r win-x64 -o Deployment/win64'
+  - 'dotnet publish RQ.Bot/RQ.Bot.csproj -c Release --self-contained -r linux-x64 -o Deployment/linux64'

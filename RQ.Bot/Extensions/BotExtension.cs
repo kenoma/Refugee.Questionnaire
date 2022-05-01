@@ -22,7 +22,7 @@ public static class BotExtension
             .AddTransient<IUpdateHandler, BotLogic>()
             .AddTransient<EntryAdmin>()
             .AddTransient<EntryQuestionnaire>()
-            .AddTransient<EntryDownloadCSV>();
+            .AddTransient<EntryDownloadCsv>();
 
         builder.Host.ConfigureServices((_, services) =>
         {

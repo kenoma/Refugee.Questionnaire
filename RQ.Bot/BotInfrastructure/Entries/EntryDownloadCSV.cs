@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Dynamic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Bot.Repo;
 using CsvHelper;
@@ -12,12 +10,12 @@ using Telegram.Bot.Types.InputFiles;
 
 namespace RQ.Bot.BotInfrastructure.Entry;
 
-public class EntryDownloadCSV
+public class EntryDownloadCsv
 {
     private readonly TelegramBotClient _botClient;
     private readonly IRepository _repo;
 
-    public EntryDownloadCSV(TelegramBotClient botClient, IRepository repo)
+    public EntryDownloadCsv(TelegramBotClient botClient, IRepository repo)
     {
         _botClient = botClient ?? throw new ArgumentNullException(nameof(botClient));
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
@@ -58,7 +56,7 @@ public class EntryDownloadCSV
             record.TryAdd(nameof(refRequest.UserId), refRequest.UserId.ToString());
             record.TryAdd(nameof(refRequest.Id), refRequest.Id.ToString());
             record.TryAdd(nameof(refRequest.IsCompleted), refRequest.IsCompleted.ToString());
-            record.TryAdd(nameof(refRequest.TimeStamp), refRequest.TimeStamp.ToString());
+            record.TryAdd(nameof(refRequest.TimeStamp), refRequest.TimeStamp.ToString("yy-MM-dd"));
 
             if (users.TryGetValue(refRequest.UserId, out var user))
             {

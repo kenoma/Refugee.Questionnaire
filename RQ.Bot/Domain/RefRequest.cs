@@ -9,7 +9,7 @@ public class RefRequest
     public DateTime TimeStamp { get; set; } = DateTime.Now;
 
     public RefRequestEntry[] Answers { get; set; } = Array.Empty<RefRequestEntry>();
-    public bool IsCompleted { get; set; } = false;
+    public bool IsCompleted { get; set; }
 
     public override string ToString() =>
         $"{TimeStamp}: {(IsCompleted ? "заполнен" : "в процессе")} {Answers.FirstOrDefault()?.Answer} ";

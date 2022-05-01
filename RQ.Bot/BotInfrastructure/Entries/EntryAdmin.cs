@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Bot.Repo;
+﻿using Bot.Repo;
 using RQ.DTO;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -20,7 +18,7 @@ internal class EntryAdmin
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
     }
     
-    public async Task StartLaborAsync(ChatId? chatId, User user)
+    public async Task StartLaborAsync(ChatId chatId, User user)
     {
         if (chatId == null)
             return;

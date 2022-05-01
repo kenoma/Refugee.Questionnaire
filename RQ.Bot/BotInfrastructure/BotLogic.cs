@@ -15,7 +15,7 @@ namespace RQ.Bot.BotInfrastructure
         private readonly TelegramBotClient _bot;
         private readonly EntryAdmin _entryAdmin;
         private readonly EntryQuestionnaire _entryQuestionnaire;
-        private readonly EntryDownloadCSV _entryDownloadCsv;
+        private readonly EntryDownloadCsv _entryDownloadCsv;
         private readonly ILogger<BotLogic> _logger;
 
         private static readonly Counter CommandsCount =
@@ -33,7 +33,7 @@ namespace RQ.Bot.BotInfrastructure
             TelegramBotClient botClient,
             EntryAdmin entryAdmin,
             EntryQuestionnaire entryQuestionnaire,
-            EntryDownloadCSV entryDownloadCsv,
+            EntryDownloadCsv entryDownloadCsv,
             ILogger<BotLogic> logger
         )
         {
@@ -82,7 +82,7 @@ namespace RQ.Bot.BotInfrastructure
             return Task.CompletedTask;
         }
 
-        private async Task BotOnMessageReceived(Message? message)
+        private async Task BotOnMessageReceived(Message message)
         {
             var user = message?.From;
             if (user == null)
@@ -125,7 +125,7 @@ namespace RQ.Bot.BotInfrastructure
             }
         }
 
-        private async Task Usage(Message? msg)
+        private async Task Usage(Message msg)
         {
             if (msg == null)
                 return;
