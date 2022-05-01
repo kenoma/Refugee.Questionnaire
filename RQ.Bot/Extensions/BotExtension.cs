@@ -21,7 +21,8 @@ public static class BotExtension
             })
             .AddTransient<IUpdateHandler, BotLogic>()
             .AddTransient<EntryAdmin>()
-            .AddTransient<EntryQuestionnaire>();
+            .AddTransient<EntryQuestionnaire>()
+            .AddTransient<EntryDownloadCSV>();
 
         builder.Host.ConfigureServices((_, services) =>
         {

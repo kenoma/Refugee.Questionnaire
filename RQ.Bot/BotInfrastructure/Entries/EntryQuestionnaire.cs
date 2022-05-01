@@ -30,10 +30,17 @@ public class EntryQuestionnaire
         if (chatId == null)
             return;
 
-        var inlineKeyboard = new InlineKeyboardMarkup(new[]
+        var inlineKeyboard = new InlineKeyboardMarkup(new InlineKeyboardButton[][]
         {
-            InlineKeyboardButton.WithCallbackData("Все запросы", BotResponce.Create("all_user_queries")),
-            InlineKeyboardButton.WithCallbackData("Новый запрос", BotResponce.Create("fill_request")),
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Все анкеты", BotResponce.Create("all_user_queries")),
+                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("fill_request")),
+            },
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Скачать мои запросы в csv", BotResponce.Create("get_user_requests"))
+            }
         });
 
         await _botClient.SendTextMessageAsync(
@@ -62,7 +69,7 @@ public class EntryQuestionnaire
                 disableWebPagePreview: false
             );
 
-            IterateRequest(chatId, refRequest);
+            await IterateRequestAsync(chatId, refRequest);
             return;
         }
 
@@ -115,7 +122,7 @@ public class EntryQuestionnaire
                 disableWebPagePreview: false
             );
 
-            IterateRequest(chatId, refRequest);
+            await IterateRequestAsync(chatId, refRequest);
             return;
         }
 
@@ -146,7 +153,7 @@ public class EntryQuestionnaire
                 disableWebPagePreview: false
             );
 
-            await IterateRequest(chatId, refRequest);
+            await IterateRequestAsync(chatId, refRequest);
             return;
         }
 
@@ -159,34 +166,42 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(request);
 
-        await IterateRequest(chatId, request);
+        await IterateRequestAsync(chatId, request);
     }
 
-    private async Task IterateRequest(ChatId chatId, RefRequest refRequest)
+    private async Task IterateRequestAsync(ChatId chatId, RefRequest refRequest)
     {
         var unanswered = _questionnaire
             .Entries
             .Select(z => z.Text)
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
-        
+
         if (unanswered == null)
         {
+            refRequest.IsCompleted = true;
+            _repo.UpdateRefRequest(refRequest);
+
+            var previewBody = $"Заполнение анкеты завершено\r\n" +
+                              string.Join("\r\n", refRequest.Answers.Select(z => $"<b>{z.Question}</b>:\t{z.Answer}")); 
+            
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 parseMode: ParseMode.Html,
-                text: string.Join("\r\n", refRequest.Answers.Select(z => $"<b>{z.Question}</b>:{z.Answer}")),
+                text: previewBody,
                 disableWebPagePreview: false
-            );    
+            );
         }
-
-        await _botClient.SendTextMessageAsync(
-            chatId: chatId,
-            parseMode: ParseMode.Markdown,
-            text: unanswered,
-            disableWebPagePreview: false
-        );
-    }
+        else
+        {
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                parseMode: ParseMode.Markdown,
+                text: unanswered,
+                disableWebPagePreview: false
+            );
+        }
+    }             
 
     public async Task<bool> TryProcessStateMachineAsync(ChatId chatId, long userId, string messageText)
     {
@@ -205,7 +220,7 @@ public class EntryQuestionnaire
         {
             refRequest.IsCompleted = true;
             _repo.UpdateRefRequest(refRequest);
-            await IterateRequest(chatId, refRequest);
+            await IterateRequestAsync(chatId, refRequest);
             return true;
         }
 
@@ -233,7 +248,7 @@ public class EntryQuestionnaire
             );
         }
 
-        await IterateRequest(chatId, refRequest);
+        await IterateRequestAsync(chatId, refRequest);
         return true;
     }
 }

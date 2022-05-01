@@ -24,9 +24,9 @@ namespace RQ.Bot.Controllers
         ///     Возвращает все записи из хранилища бота
         /// </summary>
         /// <returns></returns>
-        /// <response code="200">Список анкет воз</response>
+        /// <response code="200">Список анкет</response>
         /// <response code="401">Не передан токен для доступа</response>
-        [HttpGet("recs"), HttpHeader("X-Volunteer-Token", "----")]
+        [HttpGet("refrequest"), HttpHeader("X-Volunteer-Token", "----")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetRecords()
@@ -44,6 +44,34 @@ namespace RQ.Bot.Controllers
             }
             
             var records = _repo.GetAllRequest();
+
+            return Ok(records);
+        }
+        
+        /// <summary>
+        ///     Возвращает все записи пользователей из хранилища бота
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Список пользователей</response>
+        /// <response code="401">Не передан токен для доступа</response>
+        [HttpGet("users"), HttpHeader("X-Volunteer-Token", "----")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public IActionResult GetUsers()
+        {
+            if (!(HttpContext?.Request?.Headers?.TryGetValue("X-Volunteer-Token", out var token) ?? false))
+            {
+                return Unauthorized();
+            }
+
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecords), token);
+            
+            if (!_repo.IsKnownToken(token))
+            {
+                return Unauthorized();
+            }
+            
+            var records = _repo.GetAllUsers();
 
             return Ok(records);
         }

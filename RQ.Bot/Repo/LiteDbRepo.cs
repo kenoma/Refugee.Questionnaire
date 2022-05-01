@@ -16,22 +16,23 @@ public class LiteDbRepo : IRepository
     {
         using var db = new LiteDatabase(_dbPath);
 
-        var collection = db.GetCollection<Volunteer>(nameof(Volunteer));
+        var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.Token);
         collection.EnsureIndex(z => z.UserId, unique: true);
         
         return collection.FindOne(z => z.Token == value) != null;
     }
 
-    public bool IsKnownTgUser(long userId)
+    public bool TryGetUserById(long userId, out UserData user)
     {
         using var db = new LiteDatabase(_dbPath);
 
-        var collection = db.GetCollection<Volunteer>(nameof(Volunteer));
+        var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.Token);
         collection.EnsureIndex(z => z.UserId, unique: true);
 
-        return collection.FindOne(z => z.UserId == userId) != null;
+        user = collection.FindOne(z => z.UserId == userId);
+        return user != null;
     }
 
     public RefRequest[] GetAllRequest()
@@ -78,9 +79,41 @@ public class LiteDbRepo : IRepository
         using var db = new LiteDatabase(_dbPath);
 
         var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
-        collection.EnsureIndex(z => z.Id);
+        collection.EnsureIndex(z => z.UserId);
 
-        refRequest = collection.FindOne(z => !z.IsCompleted);
+        refRequest = collection.FindOne(z => z.UserId == userId && !z.IsCompleted);
         return refRequest != null;
+    }
+    
+    public UserData[] GetAdminUsers()
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<UserData>(nameof(UserData));
+        collection.EnsureIndex(z => z.Token);
+        collection.EnsureIndex(z => z.UserId, unique: true);
+
+        return collection.Find(z => z.IsAdmin).ToArray();
+    }
+
+    public UserData[] GetAllUsers()
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<UserData>(nameof(UserData));
+        collection.EnsureIndex(z => z.Token);
+        collection.EnsureIndex(z => z.UserId, unique: true);
+
+        return collection.FindAll().ToArray();
+    }
+
+    public void UpsertUser(UserData rfUser)
+    {
+        using var db = new LiteDatabase(_dbPath);
+
+        var collection = db.GetCollection<UserData>(nameof(UserData));
+        collection.EnsureIndex(z => z.UserId, unique: true);
+        
+        collection.Upsert(rfUser);
     }
 }

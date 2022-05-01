@@ -19,6 +19,11 @@ internal class BotResponce
     {
         return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = id.ToString("N")});
     }
+    
+    public static string Create(string entry, long userId)
+    {
+        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = userId.ToString() });
+    }
 
     public static BotResponce FromString(string callbackQueryData)
     {

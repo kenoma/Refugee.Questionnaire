@@ -15,6 +15,7 @@ namespace RQ.Bot.BotInfrastructure
         private readonly TelegramBotClient _bot;
         private readonly EntryAdmin _entryAdmin;
         private readonly EntryQuestionnaire _entryQuestionnaire;
+        private readonly EntryDownloadCSV _entryDownloadCsv;
         private readonly ILogger<BotLogic> _logger;
 
         private static readonly Counter CommandsCount =
@@ -26,17 +27,20 @@ namespace RQ.Bot.BotInfrastructure
         /// <param name="botClient"></param>
         /// <param name="entryAdmin"></param>
         /// <param name="entryQuestionnaire"></param>
+        /// <param name="entryDownloadCsv"></param>
         /// <param name="logger"></param>
         public BotLogic(
             TelegramBotClient botClient,
             EntryAdmin entryAdmin,
             EntryQuestionnaire entryQuestionnaire,
+            EntryDownloadCSV entryDownloadCsv,
             ILogger<BotLogic> logger
         )
         {
             _bot = botClient ?? throw new ArgumentNullException(nameof(botClient));
             _entryAdmin = entryAdmin ?? throw new ArgumentNullException(nameof(entryAdmin));
             _entryQuestionnaire = entryQuestionnaire ?? throw new ArgumentNullException(nameof(entryQuestionnaire));
+            _entryDownloadCsv = entryDownloadCsv ?? throw new ArgumentNullException(nameof(entryDownloadCsv));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -80,26 +84,27 @@ namespace RQ.Bot.BotInfrastructure
 
         private async Task BotOnMessageReceived(Message? message)
         {
-            if (message == null)
-                return;
-
-            var user = message.From;
+            var user = message?.From;
             if (user == null)
                 return;
 
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
-
-            _logger.LogInformation("Receive message type: {MessageType}: {MessageText} from {Member}", message.Type,
-                message.Text, chatMember.User.Username);
-
+            
+            _logger.LogInformation("Receive message type: {MessageType}: {MessageText} from {Member} ({UserId})",
+                message.Type,
+                message.Text, chatMember.User.Username, chatMember.User.Id);
+            
             if (message.Type != MessageType.Text)
                 return;
 
-            if (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text))
+            if (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text!))
                 return;
 
             if (message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true)
+            {
+                await Usage(message);
                 return;
+            }
 
             for (var entity = 0; entity < message.Entities.Length; entity++)
             {
@@ -117,31 +122,33 @@ namespace RQ.Bot.BotInfrastructure
                     };
 
                 await action;
-
-                async Task Usage(Message? msg)
-                {
-                    if (msg == null)
-                        return;
-
-                    const string usage = "*Доступные команды:*\r\n" +
-                                         "/admin - Доступ к административным функциям\r\n" +
-                                         "/request - Заполнение новой анкеты\r\n";
-
-                    var inlineKeyboard = new InlineKeyboardMarkup(new[]
-                    {
-                        InlineKeyboardButton.WithCallbackData("Административные функции", BotResponce.Create("admin")),
-                        InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("request")),
-                    });
-
-                    await _bot.SendTextMessageAsync(
-                        chatId: msg.Chat.Id,
-                        parseMode: ParseMode.Markdown,
-                        text: usage,
-                        replyMarkup: inlineKeyboard,
-                        disableWebPagePreview: false
-                    );
-                }
             }
+        }
+
+        private async Task Usage(Message? msg)
+        {
+            if (msg == null)
+                return;
+
+            var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
+            var usage = $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n" +
+                        "*Доступные команды:*\r\n" +
+                        "/admin - Доступ к административным функциям\r\n" +
+                        "/request - Заполнение новой анкеты\r\n";
+
+            var inlineKeyboard = new InlineKeyboardMarkup(new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Управление", BotResponce.Create("admin")),
+                InlineKeyboardButton.WithCallbackData("Анкеты", BotResponce.Create("request")),
+            });
+
+            await _bot.SendTextMessageAsync(
+                chatId: msg.Chat.Id,
+                parseMode: ParseMode.Markdown,
+                text: usage,
+                replyMarkup: inlineKeyboard,
+                disableWebPagePreview: false
+            );
         }
 
         // Process Inline Keyboard callback data
@@ -180,7 +187,18 @@ namespace RQ.Bot.BotInfrastructure
                     case "auq":
                         await _entryQuestionnaire.ShowArchiveRequest(callbackQuery.Message?.Chat!, user,
                             Guid.Parse(responce.Id));
-
+                        break;
+                    
+                    case "add_permitions":
+                        await _entryAdmin.PromoteUser(user.Id, long.Parse(responce.Id));
+                        break;
+                    
+                    case "get_user_requests":
+                        await _entryDownloadCsv.GetUsersRequests(callbackQuery.Message?.Chat!, user.Id);
+                        break;
+                    
+                    case "get_all_requests":
+                        await _entryDownloadCsv.GetUsersRequests(callbackQuery.Message?.Chat!);
                         break;
                 }
             }
