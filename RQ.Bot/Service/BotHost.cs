@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Types;
 
 namespace RQ.Bot.Service;
 
@@ -28,6 +29,14 @@ internal class BotHost : BackgroundService
             receiverOptions: new ReceiverOptions { },
             stoppingToken
         );
+
+        await _botClient.SetMyCommandsAsync(
+            new[]
+            {
+                new BotCommand{ Command = "/request", Description = "Заполнение новой анкеты"},
+                new BotCommand{ Command = "/admin", Description = "Доступ к административным функциям"},
+            },
+            cancellationToken: stoppingToken).ConfigureAwait(false);
 
         _logger.LogInformation("Start listening for {MeUsername}", me.Username);
     }
