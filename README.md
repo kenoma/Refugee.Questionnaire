@@ -8,11 +8,16 @@
 
 |Параметр| Значение                                        | Пример                |
 |-------|-------------------------------------------------|-----------------------|
-|--prometheusPort | Порт,по которому будут доступны метрики сервиса | 9001                  |
-|--urls | Урлы, по которому доступен API                  | "http://localhost:9002" |
-|--dbPath | Путь, где хранятся данные бота                  | tmp.ldb               |
-|--botToken | Токен, выдаваемый BotFather                     |                       |
-|--pathToQuest| Путь к файлу с шаблоном анкеты                  |sample.csv|
+|urls | Урлы, по которому доступен API                  | "http://localhost:9002" |
+|dbPath | Путь, где хранятся данные бота                  | tmp.ldb               |
+|botToken | Токен, выдаваемый BotFather                     |                       |
+|pathToQuest| Путь к файлу с шаблоном анкеты                  |sample.csv|
+
+Пример запуска под windows:
+
+```
+RQ.Bot.exe --urls="http://localhost:9002" --dbPath=tmp.ldb --botToken=xxxxxxx:yyyyyyyyyyyyy --pathToQuest=sample.csv
+```
 
 ### API 
 

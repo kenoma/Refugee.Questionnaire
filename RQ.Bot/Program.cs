@@ -1,9 +1,9 @@
-﻿using RQ.Bot.Extensions;
+﻿using Prometheus;
+using RQ.Bot.Extensions;
 
 var builder = WebApplication
     .CreateBuilder(args)
     .Configure(args)
-    .UsePrometheus()
     .UseLiteDbDatabase()
     .UseTelegramBot()
     .UseQuestionnaire();
@@ -11,7 +11,8 @@ var builder = WebApplication
 var app = builder.Build();
 
 app.UseSwagger()
-    .UseSwaggerUI();
+    .UseSwaggerUI()
+    .UseMetricServer();
 
 app.MapControllers();
 
