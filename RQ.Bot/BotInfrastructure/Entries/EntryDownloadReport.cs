@@ -28,7 +28,7 @@ public class EntryDownloadCsv
     {
         var dataToRenderCsv = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
-        var sb = RenderCsv(dataToRenderCsv.OrderByDescending(z=>z.TimeStamp));
+        var sb = RenderCsv(dataToRenderCsv.Where(z=>z.IsCompleted).OrderByDescending(z=>z.TimeStamp));
         
         var ms = new MemoryStream();
         var sw = new StreamWriter(ms, new UTF8Encoding(true));
@@ -101,7 +101,7 @@ public class EntryDownloadCsv
     {
         var dataToRenderXlsx = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
-        var ms = await RenderXlsxAsync(dataToRenderXlsx.OrderByDescending(z=>z.TimeStamp));
+        var ms = await RenderXlsxAsync(dataToRenderXlsx.Where(z=>z.IsCompleted).OrderByDescending(z=>z.TimeStamp));
         
         var payload = new InputOnlineFile(ms, $"{(allRequests ? "ВСЕ" : "ТЕКУЩИЕ")}_{DateTime.Now.Ticks}_dataset.xlsx");
         
