@@ -57,7 +57,7 @@ public class EntryDownloadCsv
         {
             var record = new Dictionary<string, string>();
             record.TryAdd("Дата заполнения",
-                refRequest.TimeStamp.ToString("dd:MM:yyyy hh:mm", CultureInfo.InvariantCulture));
+                refRequest.TimeStamp.ToString("dd.MM.yyyy hh:mm", CultureInfo.InvariantCulture));
 
             if (users.TryGetValue(refRequest.UserId, out var user))
             {
@@ -126,7 +126,7 @@ public class EntryDownloadCsv
         {
             var record = new Dictionary<string, string>();
             record.TryAdd("Дата заполнения",
-                refRequest.TimeStamp.ToString("dd:MM:yyyy hh:mm", CultureInfo.InvariantCulture));
+                refRequest.TimeStamp.ToString("dd.MM.yyyy hh:mm", CultureInfo.InvariantCulture));
 
             if (users.TryGetValue(refRequest.UserId, out var user))
             {

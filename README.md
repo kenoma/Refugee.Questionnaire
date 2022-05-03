@@ -6,17 +6,17 @@
 
 ### Параметры для запуска
 
-|Параметр| Значение                                        | Пример                |
-|-------|-------------------------------------------------|-----------------------|
-|urls | Урлы, по которому доступен API                  | "http://localhost:9002" |
-|dbPath | Путь, где хранятся данные бота                  | tmp.ldb               |
-|botToken | Токен, выдаваемый BotFather                     |                       |
-|pathToQuest| Путь к файлу с шаблоном анкеты                  |sample.csv|
+|Параметр| Значение                                | Пример                 |
+|-------|-----------------------------------------|------------------------|
+|urls | Урлы, по которому доступен API          | "http://localhost:9002" |
+|dbPath | Путь, к папке, где хранятся данные бота | tmp                    |
+|botToken | Токен, выдаваемый BotFather             |                        |
+|pathToQuest| Путь к файлу с шаблоном анкеты          | sample.csv             |
 
 Пример запуска под windows:
 
 ```
-RQ.Bot.exe --urls="http://localhost:9002" --dbPath=tmp.ldb --botToken=xxxxxxx:yyyyyyyyyyyyy --pathToQuest=sample.csv
+RQ.Bot.exe --urls="http://localhost:9002" --dbPath=tmp --botToken=xxxxxxx:yyyyyyyyyyyyy --pathToQuest=sample.csv
 ```
 
 ### API 
