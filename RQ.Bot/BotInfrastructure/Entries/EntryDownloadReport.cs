@@ -4,7 +4,6 @@ using System.Text;
 using Bot.Repo;
 using CsvHelper;
 using OfficeOpenXml;
-using OfficeOpenXml.Drawing;
 using OfficeOpenXml.Style;
 using RQ.DTO;
 using Telegram.Bot;
@@ -201,7 +200,6 @@ public class EntryDownloadCsv
                 vals.Add(sheet.Cells[r, col].Text);
             }
 
-            var group = 0;
             var duplicates = vals.GroupBy(z => z)
                 .Where(z => z.Count() > 1);
             foreach (var duplicate in duplicates)
