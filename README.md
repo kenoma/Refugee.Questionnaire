@@ -40,8 +40,8 @@ RQ.Bot.exe --urls="http://localhost:9002" --dbPath=tmp --botToken=xxxxxxx:yyyyyy
 Пример шаблона:
 
 ```csv
-Text,ValidationRegex
-"Ваше ФИО:",
-"Какого вы года рождения?","\d{4}"
-"Где вы находитесь?"
+Text,DuplicateCheck,ValidationRegex
+"Ваше ФИО:",0,
+"Какого вы года рождения?",1,"\d{4}"
+"Где вы находитесь?",0
 ```
