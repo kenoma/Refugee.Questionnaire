@@ -53,17 +53,12 @@ public class EntryDownloadCsv
         foreach (var refRequest in dataToRenderCsv)
         {
             var record = new Dictionary<string, string>();
-            record.TryAdd(nameof(refRequest.UserId), refRequest.UserId.ToString());
-            record.TryAdd(nameof(refRequest.Id), refRequest.Id.ToString());
-            record.TryAdd(nameof(refRequest.IsCompleted), refRequest.IsCompleted.ToString());
-            record.TryAdd(nameof(refRequest.TimeStamp), refRequest.TimeStamp.ToString("yy-MM-dd"));
+            record.TryAdd("Дата заполнения",
+                refRequest.TimeStamp.ToString("dd:MM:yyyy hh:mm", CultureInfo.InvariantCulture));
 
             if (users.TryGetValue(refRequest.UserId, out var user))
             {
-                record.TryAdd(nameof(user.Username), user.Username);
-                record.TryAdd(nameof(user.FirstName), user.FirstName);
-                record.TryAdd(nameof(user.LastName), user.LastName);
-                record.TryAdd(nameof(user.IsAdmin), user.IsAdmin.ToString());
+                record.TryAdd("Telegram", $"@{user.Username}");
             }
 
             foreach (var answ in refRequest.Answers)
