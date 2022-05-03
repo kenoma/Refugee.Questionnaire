@@ -37,7 +37,7 @@ namespace RQ.Bot.Controllers
                 return Unauthorized();
             }
             
-            var records = _repo.GetAllRequest();
+            var records = _repo.GetAllRequests();
 
             return Ok(records);
         }

@@ -14,15 +14,15 @@ internal class EntryAdmin
 
     public EntryAdmin(TelegramBotClient botClient, IRepository repo)
     {
-        _botClient     = botClient ?? throw new ArgumentNullException(nameof(botClient));
+        _botClient = botClient ?? throw new ArgumentNullException(nameof(botClient));
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
     }
-    
+
     public async Task StartLaborAsync(ChatId chatId, User user)
     {
         if (chatId == null)
             return;
-        
+
         if (!_repo.TryGetUserById(user.Id, out var rfUser) || !rfUser.IsAdmin)
         {
             _repo.UpsertUser(new UserData
@@ -33,12 +33,11 @@ internal class EntryAdmin
                 Username = user.Username!,
                 FirstName = user.FirstName,
                 LastName = user.LastName!
-
             });
-            
+
             var noAuthText =
                 $"Вас нет в списках доверенных пользователей, администраторы осведомлены о вас.";
-            
+
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 parseMode: ParseMode.Markdown,
@@ -58,7 +57,7 @@ internal class EntryAdmin
                 await _botClient.SendTextMessageAsync(
                     chatId: admin.ChatId,
                     parseMode: ParseMode.Html,
-                    text: $"Пользователь {user.Username} просит дать ему администраторские привелегии.",
+                    text: $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
                     replyMarkup: inlineKeyboard,
                     disableWebPagePreview: false
                 );
@@ -66,16 +65,34 @@ internal class EntryAdmin
         }
         else
         {
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
+            var inlineKeyboard = new InlineKeyboardMarkup(new InlineKeyboardButton[][]
             {
-                InlineKeyboardButton.WithCallbackData("Скачать мои заявки в csv", BotResponce.Create("get_user_requests")),
-                InlineKeyboardButton.WithCallbackData("Скачать все заявки в csv", BotResponce.Create("get_all_requests")),
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Текущие заявки в xlsx",
+                        BotResponce.Create("get_current_xlsx")),
+                    InlineKeyboardButton.WithCallbackData("Все заявки в xlsx",
+                        BotResponce.Create("get_all_xlsx")),
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Текущие заявки в csv",
+                        BotResponce.Create("get_current_csv")),
+                    InlineKeyboardButton.WithCallbackData("Все заявки в csv",
+                        BotResponce.Create("get_all_csv")),
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Архивировать текущие заявки",
+                        BotResponce.Create("archive"))
+                }
             });
 
             await _botClient.SendTextMessageAsync(
                 chatId: rfUser.ChatId,
                 parseMode: ParseMode.Markdown,
-                text: $"Ваш уникальный токен для работы с API: `{rfUser.Token}`",
+                text:
+                $"Ваш уникальный токен для работы с API: `{rfUser.Token}`\r\n Заявки, отправленные в архив доступны к скачиванию через функцию скачивания всех заявок",
                 replyMarkup: inlineKeyboard,
                 disableWebPagePreview: false
             );
@@ -132,6 +149,30 @@ internal class EntryAdmin
                 chatId: rfUser.ChatId,
                 parseMode: ParseMode.Html,
                 text: $"Вам выданы права администратор",
+                disableWebPagePreview: false
+            );
+        }
+    }
+
+    public async Task Archive(ChatId chatId, User user)
+    {
+        if (_repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdmin)
+        {
+            _repo.ArchiveCurrentRequests();
+
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                parseMode: ParseMode.Html,
+                text: "Текущие запросы отправлены в архив",
+                disableWebPagePreview: false
+            );
+        }
+        else
+        {
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                parseMode: ParseMode.Html,
+                text: "Вы не являетесь администратором",
                 disableWebPagePreview: false
             );
         }

@@ -93,12 +93,18 @@ namespace RQ.Bot.BotInfrastructure
             _logger.LogInformation("Receive message type: {MessageType}: {MessageText} from {Member} ({UserId})",
                 message.Type,
                 message.Text, chatMember.User.Username, chatMember.User.Id);
-            
+
             if (message.Type != MessageType.Text)
                 return;
 
-            if (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text!))
-                return;
+            if ((message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true) &&
+                (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text!)))
+            {return;}
+            else
+            {
+                if (message.Entities?.Any(z => z.Type == MessageEntityType.BotCommand) ?? true)
+                    await _entryQuestionnaire.InterruptCurrentQuest(message.Chat.Id, user.Id);
+            }
 
             if (message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true)
             {
@@ -117,7 +123,7 @@ namespace RQ.Bot.BotInfrastructure
                         .Split(new[] { " ", "@" }, StringSplitOptions.RemoveEmptyEntries).First()) switch
                     {
                         "/admin" => _entryAdmin.StartLaborAsync(message.Chat!, user),
-                        "/request" => _entryQuestionnaire.StartQuestionnaireAsync(message.Chat!, user),
+                        "/request" => _entryQuestionnaire.FillLatestRequest(user),
                         _ => Usage(message)
                     };
 
@@ -131,15 +137,11 @@ namespace RQ.Bot.BotInfrastructure
                 return;
 
             var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
-            var usage = $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n" +
-                        "*Доступные команды:*\r\n" +
-                        "/admin - Доступ к административным функциям\r\n" +
-                        "/request - Заполнение новой анкеты\r\n";
+            var usage = $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n";
 
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Управление", BotResponce.Create("admin")),
-                InlineKeyboardButton.WithCallbackData("Анкеты", BotResponce.Create("request")),
+                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("fill_request")),
             });
 
             await _bot.SendTextMessageAsync(
@@ -164,23 +166,13 @@ namespace RQ.Bot.BotInfrastructure
 
                 switch (responce.Entry)
                 {
-                    case "admin":
-                        await _entryAdmin.StartLaborAsync(callbackQuery.Message?.Chat!, user);
-
-                        break;
-
-                    case "request":
-                        await _entryQuestionnaire.StartQuestionnaireAsync(callbackQuery.Message?.Chat!, user);
-
-                        break;
-                        
                     case "all_user_queries":
                         await _entryQuestionnaire.GetUserRefRequestAsync(callbackQuery.Message?.Chat!, user);
 
                         break;
                         
                     case "fill_request":
-                        await _entryQuestionnaire.FillLatestRequest(callbackQuery.Message?.Chat!, user);
+                        await _entryQuestionnaire.FillLatestRequest(user);
 
                         break;
                         
@@ -193,13 +185,27 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryAdmin.PromoteUser(user.Id, long.Parse(responce.Id));
                         break;
                     
-                    case "get_user_requests":
-                        await _entryDownloadCsv.GetUsersRequests(callbackQuery.Message?.Chat!, user.Id);
+                    case "get_current_csv":
+                        await _entryDownloadCsv.GetRequestsInCsv(callbackQuery.Message?.Chat!, false);
                         break;
                     
-                    case "get_all_requests":
-                        await _entryDownloadCsv.GetUsersRequests(callbackQuery.Message?.Chat!);
+                    case "get_all_csv":
+                        await _entryDownloadCsv.GetRequestsInCsv(callbackQuery.Message?.Chat!, true);
                         break;
+                    
+                    case "get_current_xlsx":
+                        await _entryDownloadCsv.GetRequestsInXlsx(callbackQuery.Message?.Chat!, false);
+                        break;
+                    
+                    case "get_all_xlsx":
+                        await _entryDownloadCsv.GetRequestsInXlsx(callbackQuery.Message?.Chat!, true);
+                        break;
+                        
+                    case "archive":
+                        await _entryAdmin.Archive(callbackQuery.Message?.Chat!, user);
+                        break;
+                    
+                        
                 }
             }
             catch (Exception e)

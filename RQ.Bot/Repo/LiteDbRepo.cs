@@ -14,7 +14,7 @@ public class LiteDbRepo : IRepository
     
     public bool IsKnownToken(string value)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "users.ldb"));
 
         var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.Token);
@@ -25,7 +25,7 @@ public class LiteDbRepo : IRepository
 
     public bool TryGetUserById(long userId, out UserData user)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "users.ldb"));
 
         var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.Token);
@@ -35,9 +35,26 @@ public class LiteDbRepo : IRepository
         return user != null;
     }
 
-    public RefRequest[] GetAllRequest()
+    public RefRequest[] GetAllRequests()
     {
-        using var db = new LiteDatabase(_dbPath);
+        var getAllArchives = Directory.GetFiles(_dbPath, "*current_requests.ldb");
+
+        var retval = new List<RefRequest>();
+        foreach (var archive in getAllArchives)
+        {
+            using var db = new LiteDatabase(archive);
+
+            var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+
+            retval.AddRange(collection.FindAll());
+        }
+
+        return retval.ToArray();
+    }
+
+    public RefRequest[] GetCurrentRequests()
+    {
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
 
         var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
 
@@ -46,7 +63,7 @@ public class LiteDbRepo : IRepository
 
     public RefRequest[] GetAllRequestFromUser(long userId)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
 
         var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
         collection.EnsureIndex(z => z.UserId);
@@ -56,7 +73,7 @@ public class LiteDbRepo : IRepository
 
     public RefRequest GetRequest(Guid requestId)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
 
         var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
         collection.EnsureIndex(z => z.Id);
@@ -66,7 +83,7 @@ public class LiteDbRepo : IRepository
 
     public void UpdateRefRequest(RefRequest request)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
 
         var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
         collection.EnsureIndex(z => z.Id);
@@ -76,7 +93,7 @@ public class LiteDbRepo : IRepository
 
     public bool TryGetActiveUserRequest(long userId, out RefRequest refRequest)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
 
         var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
         collection.EnsureIndex(z => z.UserId);
@@ -87,7 +104,7 @@ public class LiteDbRepo : IRepository
     
     public UserData[] GetAdminUsers()
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "users.ldb"));
 
         var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.Token);
@@ -98,7 +115,7 @@ public class LiteDbRepo : IRepository
 
     public UserData[] GetAllUsers()
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "users.ldb"));
 
         var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.Token);
@@ -109,11 +126,33 @@ public class LiteDbRepo : IRepository
 
     public void UpsertUser(UserData rfUser)
     {
-        using var db = new LiteDatabase(_dbPath);
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "users.ldb"));
 
         var collection = db.GetCollection<UserData>(nameof(UserData));
         collection.EnsureIndex(z => z.UserId, unique: true);
         
         collection.Upsert(rfUser);
+    }
+
+    public void ArchiveCurrentRequests()
+    {
+        using var dbSource = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
+        using var dbDestination = new LiteDatabase(Path.Combine(_dbPath, $"{DateTime.Now.Ticks}_current_requests.ldb"));
+        
+        var collectionSource = dbSource.GetCollection<RefRequest>(nameof(RefRequest));
+        var collectionDest = dbDestination.GetCollection<RefRequest>(nameof(RefRequest));
+
+        collectionDest.Insert(collectionSource.FindAll());
+
+        collectionSource.DeleteAll();
+    }
+
+    public void RemoveRequest(Guid refRequestId)
+    {
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
+
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+
+        collection.Delete(refRequestId);
     }
 }

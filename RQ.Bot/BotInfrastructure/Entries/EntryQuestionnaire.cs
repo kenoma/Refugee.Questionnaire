@@ -21,37 +21,7 @@ public class EntryQuestionnaire
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _questionnaire = questionnaire ?? throw new ArgumentNullException(nameof(questionnaire));
     }
-
-    public async Task StartQuestionnaireAsync(ChatId chatId, User user)
-    {
-        if (user == null)
-            return;
-
-        if (chatId == null)
-            return;
-
-        var inlineKeyboard = new InlineKeyboardMarkup(new[]
-        {
-            new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Все анкеты", BotResponce.Create("all_user_queries")),
-                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("fill_request")),
-            },
-            new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Скачать мои запросы в csv", BotResponce.Create("get_user_requests"))
-            }
-        });
-
-        await _botClient.SendTextMessageAsync(
-            chatId: chatId,
-            parseMode: ParseMode.Markdown,
-            text: "Что делаем?",
-            replyMarkup: inlineKeyboard,
-            disableWebPagePreview: false
-        );
-    }
-
+    
     public async Task GetUserRefRequestAsync(Chat chatId, User user)
     {
         if (user == null)
@@ -136,24 +106,22 @@ public class EntryQuestionnaire
         );
     }
 
-    public async Task FillLatestRequest(Chat chatId, User user)
+    public async Task FillLatestRequest(User user)
     {
         if (user == null)
             return;
 
-        if (chatId == null)
-            return;
-
+        
         if (_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
         {
             await _botClient.SendTextMessageAsync(
-                chatId: chatId,
+                chatId: user.Id,
                 parseMode: ParseMode.Html,
                 text: "Необходимо завершить заполнение активного запроса, прежде чем продолжить",
                 disableWebPagePreview: false
             );
 
-            await IterateRequestAsync(chatId, refRequest);
+            await IterateRequestAsync(user.Id, refRequest);
             return;
         }
 
@@ -166,7 +134,7 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(request);
 
-        await IterateRequestAsync(chatId, request);
+        await IterateRequestAsync(user.Id, request);
     }
 
     private async Task IterateRequestAsync(ChatId chatId, RefRequest refRequest)
@@ -250,5 +218,22 @@ public class EntryQuestionnaire
 
         await IterateRequestAsync(chatId, refRequest);
         return true;
+    }
+
+    public async Task InterruptCurrentQuest(long chatId, long userId)
+    {
+        if (!_repo.TryGetActiveUserRequest(userId, out var refRequest))
+        {
+            return;
+        }
+
+        _repo.RemoveRequest(refRequest.Id);
+        
+        await _botClient.SendTextMessageAsync(
+            chatId: chatId,
+            parseMode: ParseMode.Markdown,
+            text: "*Заполнение анкеты прервано*",
+            disableWebPagePreview: false
+        );
     }
 }
