@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Drawing;
+using System.Globalization;
 using System.Text;
 using Bot.Repo;
 using CsvHelper;
@@ -17,19 +18,21 @@ public class EntryDownloadCsv
 {
     private readonly TelegramBotClient _botClient;
     private readonly IRepository _repo;
+    private readonly Questionnaire _questionnaire;
 
-    public EntryDownloadCsv(TelegramBotClient botClient, IRepository repo)
+    public EntryDownloadCsv(TelegramBotClient botClient, IRepository repo, Questionnaire questionnaire)
     {
         _botClient = botClient ?? throw new ArgumentNullException(nameof(botClient));
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        _questionnaire = questionnaire ?? throw new ArgumentNullException(nameof(questionnaire));
     }
 
     public async Task GetRequestsInCsv(ChatId chatId, bool allRequests)
     {
         var dataToRenderCsv = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
-        var sb = RenderCsv(dataToRenderCsv.Where(z=>z.IsCompleted).OrderByDescending(z=>z.TimeStamp));
-        
+        var sb = RenderCsv(dataToRenderCsv.Where(z => z.IsCompleted).OrderByDescending(z => z.TimeStamp));
+
         var ms = new MemoryStream();
         var sw = new StreamWriter(ms, new UTF8Encoding(true));
         await sw.WriteAsync(sb);
@@ -52,7 +55,7 @@ public class EntryDownloadCsv
         var records = new List<Dictionary<string, string>>();
         var users = _repo.GetAllUsers()
             .ToDictionary(z => z.UserId, z => z);
-        
+
         foreach (var refRequest in dataToRenderCsv)
         {
             var record = new Dictionary<string, string>();
@@ -101,11 +104,11 @@ public class EntryDownloadCsv
     {
         var dataToRenderXlsx = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
-        var ms = await RenderXlsxAsync(dataToRenderXlsx.Where(z=>z.IsCompleted).OrderByDescending(z=>z.TimeStamp));
-        
+        var ms = await RenderXlsxAsync(dataToRenderXlsx.Where(z => z.IsCompleted).OrderByDescending(z => z.TimeStamp));
+
         var payload = new InputOnlineFile(ms, $"{(allRequests ? "ВСЕ" : "ТЕКУЩИЕ")}_{DateTime.Now.Ticks}_dataset.xlsx");
-        
-        
+
+
         await _botClient.SendDocumentAsync(
             disableContentTypeDetection: true,
             document: payload,
@@ -113,7 +116,6 @@ public class EntryDownloadCsv
             caption: $"Выгрузка *{(allRequests ? "всех" : "текущих")}* запросов на {DateTime.Now}",
             parseMode: ParseMode.Markdown
         );
-
     }
 
     private async Task<Stream> RenderXlsxAsync(IEnumerable<RefRequest> dataToRenderXlsx)
@@ -170,8 +172,49 @@ public class EntryDownloadCsv
             }
         }
 
+        CheckDuplicates(headings, row, sheet);
+
         await package.SaveAsync();
         ms.Position = 0;
         return ms;
+    }
+
+    private void CheckDuplicates(string[] headings, int row, ExcelWorksheet sheet)
+    {
+        int col;
+        var colorList = Enum.GetValues(typeof(KnownColor))
+            .Cast<KnownColor>()
+            .ToList();
+        var rnd = new Random(Environment.TickCount);
+
+        col = 0;
+        foreach (var heading in headings)
+        {
+            ++col;
+
+            var quest = _questionnaire.Entries.FirstOrDefault(z => z.Text == heading);
+            if (quest is not { DuplicateCheck: 1 })
+                continue;
+            var vals = new List<string>();
+            for (var r = 1; r <= row; r++)
+            {
+                vals.Add(sheet.Cells[r, col].Text);
+            }
+
+            var group = 0;
+            var duplicates = vals.GroupBy(z => z)
+                .Where(z => z.Count() > 1);
+            foreach (var duplicate in duplicates)
+            {
+                var color = Color.FromKnownColor(colorList[rnd.Next(0, colorList.Count)]);
+                for (var r = 1; r <= row; r++)
+                    if (sheet.Cells[r, col].Text == duplicate.Key)
+                    {
+                        sheet.Cells[r, col].Style.Fill.PatternType = ExcelFillStyle.Solid;
+
+                        sheet.Cells[r, col].Style.Fill.BackgroundColor.SetColor(color);
+                    }
+            }
+        }
     }
 }

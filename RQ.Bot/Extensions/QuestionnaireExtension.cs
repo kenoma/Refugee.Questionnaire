@@ -20,7 +20,9 @@ public static class QuestionnaireExtension
             {
                 PrepareHeaderForMatch = args => args.Header.ToLower(),
                 NewLine = Environment.NewLine,
-                MissingFieldFound = null
+                MissingFieldFound = null,
+                IgnoreBlankLines = true,
+                BadDataFound = null
             };
 
             using var reader = new StreamReader(pathToQuest);
