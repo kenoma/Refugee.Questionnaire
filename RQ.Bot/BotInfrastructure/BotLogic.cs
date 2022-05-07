@@ -89,6 +89,7 @@ namespace RQ.Bot.BotInfrastructure
                 return;
 
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
+            await _entryAdmin.CreateIfNotExistUser(message.Chat.Id, user);
             
             _logger.LogInformation("Receive message type: {MessageType}: {MessageText} from {Member} ({UserId})",
                 message.Type,

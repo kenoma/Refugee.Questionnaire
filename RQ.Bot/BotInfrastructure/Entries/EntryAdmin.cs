@@ -57,7 +57,8 @@ internal class EntryAdmin
                 await _botClient.SendTextMessageAsync(
                     chatId: admin.ChatId,
                     parseMode: ParseMode.Html,
-                    text: $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
+                    text:
+                    $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
                     replyMarkup: inlineKeyboard,
                     disableWebPagePreview: false
                 );
@@ -176,5 +177,20 @@ internal class EntryAdmin
                 disableWebPagePreview: false
             );
         }
+    }
+
+    public Task CreateIfNotExistUser(ChatId chatId, User user)
+    {
+        _repo.UpsertUser(new UserData
+        {
+            ChatId = chatId.Identifier!.Value,
+            UserId = user.Id,
+            IsAdmin = false,
+            Username = user.Username!,
+            FirstName = user.FirstName,
+            LastName = user.LastName!,
+            PromotedByUser = -1
+        });
+        return Task.CompletedTask;
     }
 }
