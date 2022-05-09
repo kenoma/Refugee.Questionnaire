@@ -7,7 +7,7 @@ internal class BotResponce
 {
     public string Entry { get; set; } = string.Empty;
 
-    public string Id { get; set; }
+    public string Payload { get; set; }
 
 
     public static string Create(string entry)
@@ -15,14 +15,19 @@ internal class BotResponce
         return JsonConvert.SerializeObject(new BotResponce { Entry = entry});
     }
 
+    public static string Create(string entry, string payload)
+    {
+        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Payload = payload});
+    }
+    
     public static string Create(string entry, Guid id)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = id.ToString("N")});
+        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Payload = id.ToString("N")});
     }
     
     public static string Create(string entry, long userId)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Id = userId.ToString() });
+        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Payload = userId.ToString() });
     }
 
     public static BotResponce FromString(string callbackQueryData)

@@ -126,7 +126,7 @@ internal class EntryAdmin
         return _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdmin;
     }
 
-    public async Task PromoteUser(long adminUserId, long promotedUserId)
+    public async Task PromoteUserAsync(long adminUserId, long promotedUserId)
     {
         if (_repo.TryGetUserById(promotedUserId, out var rfUser))
         {
@@ -155,7 +155,7 @@ internal class EntryAdmin
         }
     }
 
-    public async Task Archive(ChatId chatId, User user)
+    public async Task ArchiveAsync(ChatId chatId, User user)
     {
         if (_repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdmin)
         {

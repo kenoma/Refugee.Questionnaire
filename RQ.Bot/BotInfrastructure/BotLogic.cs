@@ -100,12 +100,12 @@ namespace RQ.Bot.BotInfrastructure
 
             if ((message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true) &&
                 (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text!)))
-            {return;}
-            else
             {
-                if (message.Entities?.Any(z => z.Type == MessageEntityType.BotCommand) ?? true)
-                    await _entryQuestionnaire.InterruptCurrentQuest(message.Chat.Id, user.Id);
+                return;
             }
+
+            if (message.Entities?.Any(z => z.Type == MessageEntityType.BotCommand) ?? true)
+                await _entryQuestionnaire.InterruptCurrentQuest(message.Chat.Id, user.Id);
 
             if (message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true)
             {
@@ -124,7 +124,7 @@ namespace RQ.Bot.BotInfrastructure
                         .Split(new[] { " ", "@" }, StringSplitOptions.RemoveEmptyEntries).First()) switch
                     {
                         "/admin" => _entryAdmin.StartLaborAsync(message.Chat!, user),
-                        "/request" => _entryQuestionnaire.FillLatestRequest(user),
+                        "/request" => _entryQuestionnaire.FillLatestRequestAsync(user),
                         _ => Usage(message)
                     };
 
@@ -173,40 +173,51 @@ namespace RQ.Bot.BotInfrastructure
                         break;
                         
                     case "fill_request":
-                        await _entryQuestionnaire.FillLatestRequest(user);
+                        await _entryQuestionnaire.FillLatestRequestAsync(user);
 
                         break;
                         
                     case "auq":
-                        await _entryQuestionnaire.ShowArchiveRequest(callbackQuery.Message?.Chat!, user,
-                            Guid.Parse(responce.Id));
+                        await _entryQuestionnaire.ShowArchiveRequestAsync(callbackQuery.Message?.Chat!, user,
+                            Guid.Parse(responce.Payload));
                         break;
                     
                     case "add_permitions":
-                        await _entryAdmin.PromoteUser(user.Id, long.Parse(responce.Id));
+                        await _entryAdmin.PromoteUserAsync(user.Id, long.Parse(responce.Payload));
                         break;
                     
                     case "get_current_csv":
-                        await _entryDownloadCsv.GetRequestsInCsv(callbackQuery.Message?.Chat!, false);
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, false);
                         break;
                     
                     case "get_all_csv":
-                        await _entryDownloadCsv.GetRequestsInCsv(callbackQuery.Message?.Chat!, true);
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, true);
                         break;
                     
                     case "get_current_xlsx":
-                        await _entryDownloadCsv.GetRequestsInXlsx(callbackQuery.Message?.Chat!, false);
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, false);
                         break;
                     
                     case "get_all_xlsx":
-                        await _entryDownloadCsv.GetRequestsInXlsx(callbackQuery.Message?.Chat!, true);
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, true);
                         break;
                         
                     case "archive":
-                        await _entryAdmin.Archive(callbackQuery.Message?.Chat!, user);
+                        await _entryAdmin.ArchiveAsync(callbackQuery.Message?.Chat!, user);
                         break;
                     
+                    case "q_finish":
+                        await _entryQuestionnaire.CompleteAsync(callbackQuery.Message?.Chat!, user);
+                        await Usage(callbackQuery.Message);
+                        break;
+                    
+                    case "q_return":
+                        await _entryQuestionnaire.ReturnToRootAsync(callbackQuery.Message?.Chat!, user.Id);
+                        break;
                         
+                    case "q_move":
+                        await _entryQuestionnaire.MoveMenuAsync(callbackQuery.Message?.Chat!, user, responce.Payload);
+                        break;
                 }
             }
             catch (Exception e)

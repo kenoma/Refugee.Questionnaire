@@ -26,7 +26,7 @@ public class EntryDownloadCsv
         _questionnaire = questionnaire ?? throw new ArgumentNullException(nameof(questionnaire));
     }
 
-    public async Task GetRequestsInCsv(ChatId chatId, bool allRequests)
+    public async Task GetRequestsInCsvAsync(ChatId chatId, bool allRequests)
     {
         var dataToRenderCsv = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
@@ -99,7 +99,7 @@ public class EntryDownloadCsv
         return writer.GetStringBuilder();
     }
 
-    public async Task GetRequestsInXlsx(ChatId chatId, bool allRequests)
+    public async Task GetRequestsInXlsxAsync(ChatId chatId, bool allRequests)
     {
         var dataToRenderXlsx = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
