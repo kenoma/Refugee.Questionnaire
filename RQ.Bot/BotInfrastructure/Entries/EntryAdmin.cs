@@ -25,16 +25,6 @@ internal class EntryAdmin
 
         if (!_repo.TryGetUserById(user.Id, out var rfUser) || !rfUser.IsAdmin)
         {
-            _repo.UpsertUser(new UserData
-            {
-                ChatId = chatId.Identifier!.Value,
-                UserId = user.Id,
-                IsAdmin = false,
-                Username = user.Username!,
-                FirstName = user.FirstName,
-                LastName = user.LastName!
-            });
-
             var noAuthText =
                 $"Вас нет в списках доверенных пользователей, администраторы осведомлены о вас.";
 

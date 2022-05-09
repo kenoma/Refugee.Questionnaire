@@ -204,16 +204,37 @@ public class EntryQuestionnaire
                 .Distinct()
                 .ToArray();
             
+            var itemsToRemove = _questionnaire
+                .Entries
+                .Where(z => answered.Contains(z.Text))
+                .Where(z => z.Category.StartsWith(refRequest.CurrentCategory ?? string.Empty))
+                .Select(z => (string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
+                        ? z.Category
+                        : z.Category.Replace(refRequest.CurrentCategory, ""))
+                    .Split(CategoriesSeparator, StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault())
+                .AsEnumerable()
+                .Distinct()
+                .ToArray();
+            
             var buttons = menu
                 .Select(z => new[]
                 {
                     InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create("q_move", z)),
                 }).ToList();
 
+            buttons.AddRange(itemsToRemove.Select(z =>
+            {
+                return new[]
+                {
+                    InlineKeyboardButton.WithCallbackData($"Удалить записи: {z}", BotResponce.Create("q_rem", z))
+                };
+            }));
+            
             buttons.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Завершить заполнение", BotResponce.Create("q_finish")),
-                InlineKeyboardButton.WithCallbackData("Главное меню", BotResponce.Create("q_return")),
+                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create("q_finish")),
+                InlineKeyboardButton.WithCallbackData("Начало", BotResponce.Create("q_return")),
             });
 
             try
@@ -366,6 +387,36 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(refRequest);
         _logger.LogInformation("Ref request {RefId} moved to {Category}", refRequest.Id, refRequest.CurrentCategory);
+        await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
+    }
+
+    public async Task RemoveAnswersForCategoryAsync(ChatId messageChat, User user, string responcePayload)
+    {
+        if (!_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
+        {
+            return;
+        }
+
+        var catToRemove = string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
+            ? responcePayload
+            : $"{refRequest.CurrentCategory}{CategoriesSeparator}{responcePayload}";
+
+        var questions = _questionnaire.Entries
+            .Where(z => z.Category.StartsWith(catToRemove ?? string.Empty))
+            .Select(z => z.Text)
+            .ToHashSet();
+
+        refRequest.Answers = refRequest.Answers.Where(z => !questions.Contains(z.Question)).ToArray();
+
+        _repo.UpdateRefRequest(refRequest);
+        _logger.LogInformation("Ref request {RefId} category {Category} removed", refRequest.Id, catToRemove);
+        await _botClient.SendTextMessageAsync(
+            chatId: messageChat,
+            parseMode: ParseMode.MarkdownV2,
+            text:
+            $"Записи раздела {catToRemove} и дочерние были удалены",
+            disableWebPagePreview: false
+        );
         await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
     }
 }

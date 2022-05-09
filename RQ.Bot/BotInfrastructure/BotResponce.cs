@@ -5,29 +5,29 @@ namespace RQ.Bot.BotInfrastructure.Entry;
 
 internal class BotResponce
 {
-    public string Entry { get; set; } = string.Empty;
+    public string E { get; set; } = string.Empty;
 
-    public string Payload { get; set; }
+    public string P { get; set; }
 
 
     public static string Create(string entry)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry});
+        return JsonConvert.SerializeObject(new BotResponce { E = entry});
     }
 
     public static string Create(string entry, string payload)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Payload = payload});
+        return JsonConvert.SerializeObject(new BotResponce { E = entry, P = payload});
     }
     
     public static string Create(string entry, Guid id)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Payload = id.ToString("N")});
+        return JsonConvert.SerializeObject(new BotResponce { E = entry, P = id.ToString("N")});
     }
     
     public static string Create(string entry, long userId)
     {
-        return JsonConvert.SerializeObject(new BotResponce { Entry = entry, Payload = userId.ToString() });
+        return JsonConvert.SerializeObject(new BotResponce { E = entry, P = userId.ToString() });
     }
 
     public static BotResponce FromString(string callbackQueryData)

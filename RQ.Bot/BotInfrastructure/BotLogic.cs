@@ -165,7 +165,7 @@ namespace RQ.Bot.BotInfrastructure
 
                 _logger.LogInformation("Received callback {@Callback}", responce);
 
-                switch (responce.Entry)
+                switch (responce.E)
                 {
                     case "all_user_queries":
                         await _entryQuestionnaire.GetUserRefRequestAsync(callbackQuery.Message?.Chat!, user);
@@ -179,11 +179,11 @@ namespace RQ.Bot.BotInfrastructure
                         
                     case "auq":
                         await _entryQuestionnaire.ShowArchiveRequestAsync(callbackQuery.Message?.Chat!, user,
-                            Guid.Parse(responce.Payload));
+                            Guid.Parse(responce.P));
                         break;
                     
                     case "add_permitions":
-                        await _entryAdmin.PromoteUserAsync(user.Id, long.Parse(responce.Payload));
+                        await _entryAdmin.PromoteUserAsync(user.Id, long.Parse(responce.P));
                         break;
                     
                     case "get_current_csv":
@@ -216,8 +216,14 @@ namespace RQ.Bot.BotInfrastructure
                         break;
                         
                     case "q_move":
-                        await _entryQuestionnaire.MoveMenuAsync(callbackQuery.Message?.Chat!, user, responce.Payload);
+                        await _entryQuestionnaire.MoveMenuAsync(callbackQuery.Message?.Chat!, user, responce.P);
                         break;
+                        
+                    case "q_rem":
+                        await _entryQuestionnaire.RemoveAnswersForCategoryAsync(callbackQuery.Message?.Chat!, user, responce.P);
+                        break;
+                    
+                        
                 }
             }
             catch (Exception e)
