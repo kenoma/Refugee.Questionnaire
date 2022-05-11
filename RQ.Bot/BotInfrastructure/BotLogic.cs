@@ -223,6 +223,13 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryQuestionnaire.RemoveAnswersForCategoryAsync(callbackQuery.Message?.Chat!, user, responce.P);
                         break;
                     
+                    case "list_admins":
+                        await _entryAdmin.ListAdminsApprovedByUsersAsync(callbackQuery.Message?.Chat!, user);
+                        break;
+                        
+                    case "remove_user":
+                        await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
+                        break;
                         
                 }
             }

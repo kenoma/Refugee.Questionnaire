@@ -11,11 +11,13 @@ internal class EntryAdmin
 {
     private readonly TelegramBotClient _botClient;
     private readonly IRepository _repo;
+    private readonly ILogger<EntryAdmin> _logger;
 
-    public EntryAdmin(TelegramBotClient botClient, IRepository repo)
+    public EntryAdmin(TelegramBotClient botClient, IRepository repo, ILogger<EntryAdmin> logger)
     {
         _botClient = botClient ?? throw new ArgumentNullException(nameof(botClient));
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task StartLaborAsync(ChatId chatId, User user)
@@ -76,6 +78,11 @@ internal class EntryAdmin
                 {
                     InlineKeyboardButton.WithCallbackData("Архивировать текущие заявки",
                         BotResponce.Create("archive"))
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Список администраторов",
+                        BotResponce.Create("list_admins"))
                 }
             });
 
@@ -94,16 +101,24 @@ internal class EntryAdmin
     {
         if (!_repo.GetAdminUsers().Any())
         {
-            _repo.UpsertUser(new UserData
+            if (!_repo.TryGetUserById(user.Id, out var userData))
             {
-                ChatId = chatId.Identifier!.Value,
-                UserId = user.Id,
-                IsAdmin = true,
-                Username = user.Username!,
-                FirstName = user.FirstName,
-                LastName = user.LastName!,
-                PromotedByUser = -1
-            });
+                _repo.UpsertUser(new UserData
+                {
+                    ChatId = chatId.Identifier!.Value,
+                    UserId = user.Id,
+                    IsAdmin = true,
+                    Username = user.Username!,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName!,
+                    PromotedByUser = -1
+                });
+            }
+            else
+            {
+                userData.IsAdmin = true;
+                _repo.UpsertUser(userData);
+            }
 
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
@@ -171,16 +186,75 @@ internal class EntryAdmin
 
     public Task CreateIfNotExistUser(ChatId chatId, User user)
     {
-        _repo.UpsertUser(new UserData
+        if (!_repo.TryGetUserById(user.Id, out _))
         {
-            ChatId = chatId.Identifier!.Value,
-            UserId = user.Id,
-            IsAdmin = false,
-            Username = user.Username!,
-            FirstName = user.FirstName,
-            LastName = user.LastName!,
-            PromotedByUser = -1
-        });
+            _repo.UpsertUser(new UserData
+            {
+                ChatId = chatId.Identifier!.Value,
+                UserId = user.Id,
+                IsAdmin = false,
+                Username = user.Username!,
+                FirstName = user.FirstName,
+                LastName = user.LastName!,
+                PromotedByUser = -1
+            });
+        }
+
         return Task.CompletedTask;
+    }
+
+    public async Task ListAdminsApprovedByUsersAsync(ChatId messageChat, User user)
+    {
+        var users = _repo.GetAllUsers();
+        var promotedUsers = users.Where(z => z.PromotedByUser == user.Id).Select(z =>
+            InlineKeyboardButton.WithCallbackData($"{z.Username} ({z.UserId})",
+                BotResponce.Create("remove_user", z.UserId)));
+
+        var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
+
+        await _botClient.SendTextMessageAsync(
+            chatId: messageChat,
+            parseMode: ParseMode.Html,
+            text:
+            "Список администраторов, назначенных вами",
+            replyMarkup: inlineKeyboard,
+            disableWebPagePreview: false
+        );
+    }
+
+    public async Task RevokeAdminAsync(ChatId messageChat, long userId)
+    {
+        var users = _repo.GetAllUsers();
+        var revokedList = new HashSet<long>(new[] { userId });
+
+        var counter = 0;
+
+        while (counter != revokedList.Count)
+        {
+            counter = revokedList.Count;
+            foreach (var user in users)
+            {
+                if (revokedList.Contains(user.PromotedByUser))
+                {
+                    revokedList.Add(user.UserId);
+                }
+            }
+        }
+
+        var usersToRevoke = users.Where(z => revokedList.Contains(z.UserId));
+        foreach (var user in usersToRevoke)
+        {
+            user.IsAdmin = false;
+            user.PromotedByUser = 0;
+            _repo.UpsertUser(user);
+            await _botClient.SendTextMessageAsync(
+                chatId: user.ChatId,
+                parseMode: ParseMode.Html,
+                text:
+                "Вас лишили прав администратора",
+                disableWebPagePreview: false
+            );
+            _logger.LogInformation("User {UserId} was removed from admin list", user.UserId);
+        }
     }
 }
