@@ -103,7 +103,10 @@ public class EntryDownloadCsv
     {
         var dataToRenderXlsx = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
-        var ms = await RenderXlsxAsync(dataToRenderXlsx.Where(z => z.IsCompleted).OrderByDescending(z => z.TimeStamp.Ticks));
+        var ms = await RenderXlsxAsync(dataToRenderXlsx
+            .Where(z => z.IsCompleted)
+            .OrderByDescending(z => z.TimeStamp)
+            .ToArray());
 
         var payload = new InputOnlineFile(ms, $"{(allRequests ? "ВСЕ" : "ТЕКУЩИЕ")}_{DateTime.Now.Ticks}_dataset.xlsx");
 
@@ -127,7 +130,7 @@ public class EntryDownloadCsv
         {
             var record = new Dictionary<string, string>();
             record.TryAdd("Дата заполнения",
-                refRequest.TimeStamp.ToString("dd.MM.yyyy hh:mm", CultureInfo.InvariantCulture));
+                refRequest.TimeStamp.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture));
 
             if (users.TryGetValue(refRequest.UserId, out var user))
             {
