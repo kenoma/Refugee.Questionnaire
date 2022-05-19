@@ -188,7 +188,7 @@ internal class EntryAdmin
 
     public Task CreateIfNotExistUser(ChatId chatId, User user)
     {
-        if (!_repo.TryGetUserById(user.Id, out _))
+        if (!_repo.TryGetUserById(user.Id, out var userData))
         {
             _repo.UpsertUser(new UserData
             {
@@ -200,6 +200,15 @@ internal class EntryAdmin
                 LastName = user.LastName!,
                 PromotedByUser = -1
             });
+        }
+        else
+        {
+            //Ветка для админа. добавленного через коммандную строку
+            userData.ChatId = chatId.Identifier!.Value;
+            userData.Username = user.Username;
+            userData.FirstName = user.FirstName;
+            userData.LastName = user.LastName;
+            _repo.UpsertUser(userData);
         }
 
         return Task.CompletedTask;

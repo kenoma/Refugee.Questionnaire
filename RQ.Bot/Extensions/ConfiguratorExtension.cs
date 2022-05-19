@@ -13,6 +13,7 @@ public static class ConfiguratorExtension
         {
             configurationBuilder.AddCommandLine(args);
             configurationBuilder.AddEnvironmentVariables();
+            
         });
             
         // builder.Host.UseSerilog((ctx, logCfg) =>

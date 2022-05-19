@@ -10,7 +10,7 @@ public static class BotExtension
 {
     public static WebApplicationBuilder UseTelegramBot(this WebApplicationBuilder builder)
     {
-        builder.Services.AddSingleton(z =>
+        builder.Services.AddSingleton(_ =>
             {
                 var botToken = builder.Configuration["botToken"];
 
@@ -22,11 +22,18 @@ public static class BotExtension
             .AddTransient<IUpdateHandler, BotLogic>()
             .AddTransient<EntryAdmin>()
             .AddTransient<EntryQuestionnaire>()
-            .AddTransient<EntryDownloadCsv>();
+            .AddTransient<EntryDownloadCsv>()
+            .AddSingleton(_ =>
+            {
+                var rawUserId = builder.Configuration["adminID"];
+
+                return long.TryParse(rawUserId, out var userId) ? new InitAdminParams { UserId = userId } : new InitAdminParams();
+            });
 
         builder.Host.ConfigureServices((_, services) =>
         {
             services.AddHostedService<BotHost>();
+            services.AddHostedService<InitAdminHost>();
         });
         return builder;
     }
