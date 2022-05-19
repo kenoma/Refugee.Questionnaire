@@ -208,7 +208,7 @@ public class EntryDownloadCsv
                 for (var r = 1; r <= row; r++)
                     if (sheet.Cells[r, col].Text == duplicate.Key)
                     {
-                        sheet.Cells[r, col].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        sheet.Cells[r, col].Style.Fill.PatternType = ExcelFillStyle.LightTrellis;
 
                         sheet.Cells[r, col].Style.Fill.BackgroundColor.SetColor(color);
                     }

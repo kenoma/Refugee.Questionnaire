@@ -1,4 +1,4 @@
-Text,DuplicateCheck,Group,Category,ValidationRegex
+Text,DuplicateCheck,Category,ValidationRegex
 "Обязательный вопрос 1",0,,
 "Обязательный вопрос 2",0,,
 "Обязательный вопрос 3",0,,
