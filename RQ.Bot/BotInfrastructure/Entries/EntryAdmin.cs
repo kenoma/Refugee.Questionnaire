@@ -133,7 +133,8 @@ internal class EntryAdmin
 
     public async Task PromoteUserAsync(long adminUserId, long promotedUserId)
     {
-        if (_repo.TryGetUserById(promotedUserId, out var rfUser))
+        if (_repo.TryGetUserById(promotedUserId, out var rfUser) &&
+            _repo.TryGetUserById(adminUserId, out var adminUser))
         {
             rfUser.IsAdmin = true;
             rfUser.PromotedByUser = adminUserId;
@@ -146,7 +147,8 @@ internal class EntryAdmin
                 await _botClient.SendTextMessageAsync(
                     chatId: admin.ChatId,
                     parseMode: ParseMode.Html,
-                    text: $"Пользователь @{rfUser.Username} повышен до администратора.",
+                    text:
+                    $"Пользователь @{rfUser.Username} повышен до администратора пользователем @{adminUser.Username}.",
                     disableWebPagePreview: false
                 );
             }
@@ -154,7 +156,7 @@ internal class EntryAdmin
             await _botClient.SendTextMessageAsync(
                 chatId: rfUser.ChatId,
                 parseMode: ParseMode.Html,
-                text: $"Вам выданы права администратор",
+                text: $"Вам выданы права администратора пользователем @{adminUser.Username}",
                 disableWebPagePreview: false
             );
         }
