@@ -16,7 +16,7 @@ public class EntryQuestionnaire
     private readonly ILogger<EntryQuestionnaire> _logger;
     private const int ButtonsPerMessage = 30;
     public const string CategoriesSeparator = "->";
-    
+
     public EntryQuestionnaire(TelegramBotClient botClient, IRepository repo, Questionnaire questionnaire,
         ILogger<EntryQuestionnaire> logger)
     {
@@ -145,7 +145,7 @@ public class EntryQuestionnaire
     {
         var unanswered = _questionnaire
             .Entries
-            .Where(z => z.Category.Equals(refRequest.CurrentCategory))
+            .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
             .Select(z => z.Text)
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
@@ -182,92 +182,19 @@ public class EntryQuestionnaire
             return false;
         }
 
-        var leafs = _questionnaire
-            .Entries
-            .Where(z => z.Category.Equals(refRequest.CurrentCategory))
-            .ToArray();
-
-        if (!leafs.Any())
-        {
-            var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
-
-            var menu = _questionnaire
-                .Entries
-                .Where(z => !answered.Contains(z.Text))
-                .Where(z => z.Category.StartsWith(refRequest.CurrentCategory ?? string.Empty))
-                .Select(z => (string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
-                        ? z.Category
-                        : z.Category.Replace(refRequest.CurrentCategory, ""))
-                    .Split(CategoriesSeparator, StringSplitOptions.RemoveEmptyEntries)
-                    .FirstOrDefault())
-                .AsEnumerable()
-                .Distinct()
-                .ToArray();
-            
-            var itemsToRemove = _questionnaire
-                .Entries
-                .Where(z => answered.Contains(z.Text))
-                .Where(z => z.Category.StartsWith(refRequest.CurrentCategory ?? string.Empty))
-                .Select(z => (string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
-                        ? z.Category
-                        : z.Category.Replace(refRequest.CurrentCategory, ""))
-                    .Split(CategoriesSeparator, StringSplitOptions.RemoveEmptyEntries)
-                    .FirstOrDefault())
-                .AsEnumerable()
-                .Distinct()
-                .ToArray();
-            
-            var buttons = menu
-                .Select(z => new[]
-                {
-                    InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create("q_move", z)),
-                }).ToList();
-
-            buttons.AddRange(itemsToRemove.Select(z =>
-            {
-                return new[]
-                {
-                    InlineKeyboardButton.WithCallbackData($"Удалить записи: {z}", BotResponce.Create("q_rem", z))
-                };
-            }));
-            
-            buttons.Add(new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create("q_finish")),
-                InlineKeyboardButton.WithCallbackData("Начало", BotResponce.Create("q_return")),
-            });
-
-            try
-            {
-                await _botClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    parseMode: ParseMode.Html,
-                    text: $"Выберите пункт меню",
-                    replyMarkup: new InlineKeyboardMarkup(buttons),
-                    disableWebPagePreview: false
-                );
-            }
-            catch
-            {
-                await _botClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    parseMode: ParseMode.Markdown,
-                    text:
-                    $"При генерации пунктов меню: `{string.Join(",", menu)}` возникла ошибка, попробуйте сократить их длину (суммарная длина нагрузки не должна быть более 30 символов)",
-                    disableWebPagePreview: false
-                );
-                throw;
-            }
-
-            return true;
-        }
-
         var unanswered = _questionnaire
             .Entries
-            .Where(z => z.Category.Equals(refRequest.CurrentCategory))
+            .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
             .Select(z => z.Text)
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
+
+        if (string.IsNullOrEmpty(unanswered) ||
+            !string.IsNullOrWhiteSpace(_questionnaire.Entries.First(z => z.Text == unanswered).Category))
+        {
+            if (await DrawCategories(chatId, refRequest))
+                return true;
+        }
 
         if (unanswered == null || string.IsNullOrWhiteSpace(messageText))
         {
@@ -302,6 +229,91 @@ public class EntryQuestionnaire
 
         await IterateRequestAsync(chatId, refRequest);
         return true;
+    }
+
+    private async Task<bool> DrawCategories(ChatId chatId, RefRequest refRequest)
+    {
+        var leafs = _questionnaire
+            .Entries
+            .Where(z => z.Category.Equals(refRequest.CurrentCategory))
+            .ToArray();
+
+        if (!leafs.Any())
+        {
+            var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
+
+            var menu = _questionnaire
+                .Entries
+                .Where(z => !answered.Contains(z.Text))
+                .Where(z => z.Category.StartsWith(refRequest.CurrentCategory ?? string.Empty))
+                .Select(z => (string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
+                        ? z.Category
+                        : z.Category.Replace(refRequest.CurrentCategory, ""))
+                    .Split(CategoriesSeparator, StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault())
+                .AsEnumerable()
+                .Distinct()
+                .ToArray();
+
+            var itemsToRemove = _questionnaire
+                .Entries
+                .Where(z => answered.Contains(z.Text))
+                .Where(z => z.Category.StartsWith(refRequest.CurrentCategory ?? string.Empty))
+                .Select(z => (string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
+                        ? z.Category
+                        : z.Category.Replace(refRequest.CurrentCategory, ""))
+                    .Split(CategoriesSeparator, StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault())
+                .AsEnumerable()
+                .Distinct()
+                .ToArray();
+
+            var buttons = menu
+                .Select(z => new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create("q_move", z)),
+                }).ToList();
+
+            buttons.AddRange(itemsToRemove.Select(z =>
+            {
+                return new[]
+                {
+                    InlineKeyboardButton.WithCallbackData($"Удалить записи: {z}", BotResponce.Create("q_rem", z))
+                };
+            }));
+
+            buttons.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create("q_finish")),
+                InlineKeyboardButton.WithCallbackData("Начало", BotResponce.Create("q_return")),
+            });
+
+            try
+            {
+                await _botClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    parseMode: ParseMode.Html,
+                    text: $"Выберите пункт меню",
+                    replyMarkup: new InlineKeyboardMarkup(buttons),
+                    disableWebPagePreview: false
+                );
+            }
+            catch
+            {
+                await _botClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    parseMode: ParseMode.Markdown,
+                    text:
+                    $"При генерации пунктов меню: `{string.Join(",", menu)}` возникла ошибка, попробуйте сократить их длину (суммарная длина нагрузки не должна быть более 30 символов)",
+                    disableWebPagePreview: false
+                );
+                throw;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public async Task InterruptCurrentQuest(long chatId, long userId)

@@ -25,6 +25,11 @@ public class UserData
     public string Username { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    
+
     public long PromotedByUser { get; set; }
+
+    /// <summary>
+    ///     Дата\время создания пользователя
+    /// </summary>
+    public DateTime Created { get; set; } = DateTime.Now;
 }
