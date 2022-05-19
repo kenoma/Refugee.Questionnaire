@@ -207,7 +207,7 @@ namespace RQ.Bot.BotInfrastructure
                         break;
                     
                     case "q_finish":
-                        await _entryQuestionnaire.CompleteAsync(callbackQuery.Message?.Chat!, user);
+                        await _entryQuestionnaire.CompleteAsync(callbackQuery.Message?.Chat!, user.Id);
                         await Usage(callbackQuery.Message);
                         break;
                     
@@ -230,6 +230,15 @@ namespace RQ.Bot.BotInfrastructure
                     case "remove_user":
                         await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
                         break;
+                    case "q_switch_yes":
+                        await _entryQuestionnaire.PassSwitch(callbackQuery.Message?.Chat!, user, int.Parse(responce.P),
+                            true);
+                        break;
+                    case "q_switch_no":
+                        await _entryQuestionnaire.PassSwitch(callbackQuery.Message?.Chat!, user, int.Parse(responce.P),
+                            false);
+                        break;
+                        
                         
                 }
             }

@@ -143,6 +143,14 @@ public class EntryQuestionnaire
 
     private async Task IterateRequestAsync(ChatId chatId, RefRequest refRequest)
     {
+        var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
+        
+        if (!_questionnaire.Entries.Select(z=>z.Text).Except(answered).Any())
+        {
+            await CompleteAsync(chatId, refRequest.UserId);
+            return;
+        }
+
         var unanswered = _questionnaire
             .Entries
             .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
@@ -150,6 +158,14 @@ public class EntryQuestionnaire
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
 
+        var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
+
+        if (correspondingEntry != null && correspondingEntry.IsGroupSwitch != 0)
+        {
+            await DrawSwitch(chatId, correspondingEntry);
+            return;
+        }
+        
         if (unanswered == null)
         {
             _repo.UpdateRefRequest(refRequest);
@@ -181,6 +197,13 @@ public class EntryQuestionnaire
         {
             return false;
         }
+        
+        var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
+        if (!_questionnaire.Entries.Select(z=>z.Text).Except(answered).Any())
+        {
+            await CompleteAsync(chatId, refRequest.UserId);
+            return true;
+        }
 
         var unanswered = _questionnaire
             .Entries
@@ -189,8 +212,16 @@ public class EntryQuestionnaire
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
 
+        var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
+
+        if (correspondingEntry != null && correspondingEntry.IsGroupSwitch != 0)
+        {
+            await DrawSwitch(chatId, correspondingEntry);
+            return true;
+        }
+
         if (string.IsNullOrEmpty(unanswered) ||
-            !string.IsNullOrWhiteSpace(_questionnaire.Entries.First(z => z.Text == unanswered).Category))
+            !string.IsNullOrWhiteSpace(correspondingEntry.Category))
         {
             if (await DrawCategories(chatId, refRequest))
                 return true;
@@ -231,6 +262,23 @@ public class EntryQuestionnaire
         return true;
     }
 
+    private async Task DrawSwitch(ChatId chatId, QuestionnaireEntry correspondingEntry)
+    {
+        var buttons = new[]
+        {
+            InlineKeyboardButton.WithCallbackData("Да", BotResponce.Create("q_switch_yes", correspondingEntry.Group)),
+            InlineKeyboardButton.WithCallbackData("Нет", BotResponce.Create("q_switch_no", correspondingEntry.Group))
+        };
+
+        await _botClient.SendTextMessageAsync(
+            chatId: chatId,
+            parseMode: ParseMode.Html,
+            text: correspondingEntry.Text,
+            replyMarkup: new InlineKeyboardMarkup(buttons),
+            disableWebPagePreview: false
+        );
+    }
+
     private async Task<bool> DrawCategories(ChatId chatId, RefRequest refRequest)
     {
         var leafs = _questionnaire
@@ -257,6 +305,7 @@ public class EntryQuestionnaire
 
             var itemsToRemove = _questionnaire
                 .Entries
+                .Where(z => !string.IsNullOrWhiteSpace(z.Category))
                 .Where(z => answered.Contains(z.Text))
                 .Where(z => z.Category.StartsWith(refRequest.CurrentCategory ?? string.Empty))
                 .Select(z => (string.IsNullOrWhiteSpace(refRequest.CurrentCategory)
@@ -335,9 +384,9 @@ public class EntryQuestionnaire
         );
     }
 
-    public async Task CompleteAsync(ChatId messageChat, User user)
+    public async Task CompleteAsync(ChatId messageChat, long userId)
     {
-        if (!_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
+        if (!_repo.TryGetActiveUserRequest(userId, out var refRequest))
         {
             return;
         }
@@ -350,14 +399,14 @@ public class EntryQuestionnaire
         {
             await _botClient.SendTextMessageAsync(
                 chatId: messageChat,
-                parseMode: ParseMode.MarkdownV2,
+                parseMode: ParseMode.Markdown,
                 text:
                 $"Завершенная анкета\r\n{string.Join("\r\n", refRequest.Answers.Select(z => $"`{z.Question.PadRight(20).Substring(0, 20)}|\t`{z.Answer}"))}",
                 disableWebPagePreview: false
             );
         }
 
-        _logger.LogInformation("Ref request {RefId} completed by {UserId}", refRequest.Id, user.Id);
+        _logger.LogInformation("Ref request {RefId} completed by {UserId}", refRequest.Id, userId);
     }
 
     public async Task ReturnToRootAsync(ChatId messageChat, long userId)
@@ -376,7 +425,7 @@ public class EntryQuestionnaire
         {
             await _botClient.SendTextMessageAsync(
                 chatId: messageChat,
-                parseMode: ParseMode.MarkdownV2,
+                parseMode: ParseMode.Markdown,
                 text:
                 $"Заполненные данные\r\n{string.Join("\r\n", refRequest.Answers.Select(z => $"`{z.Question.PadRight(20).Substring(0, 20)}|\t`{z.Answer}"))}",
                 disableWebPagePreview: false
@@ -424,11 +473,45 @@ public class EntryQuestionnaire
         _logger.LogInformation("Ref request {RefId} category {Category} removed", refRequest.Id, catToRemove);
         await _botClient.SendTextMessageAsync(
             chatId: messageChat,
-            parseMode: ParseMode.MarkdownV2,
+            parseMode: ParseMode.Markdown,
             text:
             $"Записи раздела {catToRemove} и дочерние были удалены",
             disableWebPagePreview: false
         );
+        await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
+    }
+
+    public async Task PassSwitch(ChatId messageChat, User user, int entryGroup, bool pass)
+    {
+        if (!_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
+        {
+            return;
+        }
+
+        var switchEntry = _questionnaire
+            .Entries
+            .FirstOrDefault(z => z.IsGroupSwitch != 0 && z.Group == entryGroup);
+
+        refRequest.Answers = refRequest.Answers.Concat(new[]
+        {
+            new RefRequestEntry
+            {
+                Question = switchEntry!.Text,
+                Answer = pass ? "Да" : "Нет"
+            }
+        }).ToArray();
+        _repo.UpdateRefRequest(refRequest);
+
+        if (!pass)
+        {
+            var notPassedEntries = _questionnaire
+                .Entries.Where(z => z.IsGroupSwitch == 0 && z.Group == entryGroup)
+                .Select(entryToNotPass => new RefRequestEntry { Question = entryToNotPass.Text, Answer = "-" })
+                .ToList();
+            refRequest.Answers = refRequest.Answers.Concat(notPassedEntries).ToArray();
+            _repo.UpdateRefRequest(refRequest);
+        }
+
         await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
     }
 }

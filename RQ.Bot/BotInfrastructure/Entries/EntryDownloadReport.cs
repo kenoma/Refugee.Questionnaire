@@ -136,7 +136,7 @@ public class EntryDownloadCsv
 
             foreach (var answ in refRequest.Answers)
             {
-                record.Add(answ.Question, answ.Answer);
+                record.TryAdd(answ.Question, answ.Answer);
             }
 
             records.Add(record);
