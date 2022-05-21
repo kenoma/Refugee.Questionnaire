@@ -21,4 +21,7 @@ public interface IRepository
     void UpsertUser(UserData rfUser);
     void ArchiveCurrentRequests();
     void RemoveRequest(Guid refRequestId);
+    RefRequest[] GetRequestsDt(DateTime dt);
+    RefRequest[] GetRequestsDtArch(DateTime dt);
+    UserData[] GetUsersDt(DateTime dt);
 }

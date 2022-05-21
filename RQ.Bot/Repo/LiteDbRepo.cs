@@ -155,4 +155,46 @@ public class LiteDbRepo : IRepository
 
         collection.Delete(refRequestId);
     }
+    
+    public RefRequest[] GetRequestsDt(DateTime dt)
+    {
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "current_requests.ldb"));
+
+        var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+        collection.EnsureIndex(z => z.Id);
+        collection.EnsureIndex(z => z.TimeStamp);
+
+        return collection.Find(z => z.TimeStamp > dt).OrderBy(z => z.TimeStamp).ToArray();
+
+      
+    }
+    public RefRequest[] GetRequestsDtArch(DateTime dt)
+    {
+        var getAllArchives = Directory.GetFiles(_dbPath, "*current_requests.ldb");
+
+        var retval = new List<RefRequest>();
+        foreach (var archive in getAllArchives)
+        {
+            using var db = new LiteDatabase(archive);
+
+            var collection = db.GetCollection<RefRequest>(nameof(RefRequest));
+            collection.EnsureIndex(z => z.Id);
+            collection.EnsureIndex(z => z.TimeStamp);
+
+            retval.AddRange(collection.Find(z => z.TimeStamp > dt).OrderBy(z => z.TimeStamp));
+        }
+
+        return retval.OrderBy(t => t.TimeStamp).ToArray();
+    }
+    public UserData[] GetUsersDt(DateTime dt)
+    {
+        using var db = new LiteDatabase(Path.Combine(_dbPath, "users.ldb"));
+
+        var collection = db.GetCollection<UserData>(nameof(UserData));
+        collection.EnsureIndex(z => z.Token);
+        collection.EnsureIndex(z => z.UserId, unique: true);
+        collection.EnsureIndex(z => z.Created);
+
+        return collection.Find(z => z.Created > dt).OrderBy(z => z.Created).ToArray();
+    }
 }
