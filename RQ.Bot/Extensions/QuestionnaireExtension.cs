@@ -22,6 +22,7 @@ public static class QuestionnaireExtension
                 MissingFieldFound = null,
                 IgnoreBlankLines = true,
                 BadDataFound = null,
+                DetectDelimiter = true,
                 DetectDelimiterValues = new[] { ",", ";", "\t" }
             };
 
