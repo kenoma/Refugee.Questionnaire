@@ -27,7 +27,15 @@ public static class BotExtension
             {
                 var rawUserId = builder.Configuration["adminID"];
 
-                return long.TryParse(rawUserId, out var userId) ? new InitAdminParams { UserId = userId } : new InitAdminParams();
+                return long.TryParse(rawUserId, out var userId)
+                    ? new InitAdminParams { UserId = userId }
+                    : new InitAdminParams();
+            })
+            .AddSingleton(_ =>
+            {
+                var sorting = builder.Configuration["sorting"];
+
+                return new ReportGenerationParams { IsDescendingSorting = sorting == "desc" };
             });
 
         builder.Host.ConfigureServices((_, services) =>
