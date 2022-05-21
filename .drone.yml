@@ -1,0 +1,35 @@
+---
+
+kind: pipeline
+type: docker
+name: develop
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: build
+    image: gcr.io/kaniko-project/executor:debug
+    pull: if-not-exists
+    environment:
+      DOCKER_PUSH_REGISTRY:
+        from_secret: "docker_push_registry"
+      DOCKER_CONFIG_JSON:
+        from_secret: "docker_config_json"
+    commands:
+      - echo $${DOCKER_CONFIG_JSON} > /kaniko/.docker/config.json
+      - >-
+        /kaniko/executor
+        --insecure-registry $${DOCKER_PUSH_REGISTRY}
+        --context ./
+        --dockerfile /Dockerfile
+        --target prod
+        --cache=true
+        --cache-repo "$${DOCKER_PUSH_REGISTRY}/refugee/quest-bot-cache"
+        --destination "$${DOCKER_PUSH_REGISTRY}/refugee/quest-bot:$${DRONE_BUILD_NUMBER}"
+      - echo "$${DOCKER_PUSH_REGISTRY}/refugee/quest-bot:$${DRONE_BUILD_NUMBER}"
+
+trigger:
+  branch:
+  - docker

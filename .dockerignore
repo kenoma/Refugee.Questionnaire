@@ -4,3 +4,8 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .idea/
+.dockerignore
+.gitlab-ci.yml
+.drone.yml
+README.md
+.git/
