@@ -1,0 +1,61 @@
+---
+
+- name: "Start deploy bot-{{ instance.port }}"
+  ansible.builtin.debug:
+    msg: "deploy bot-{{ instance.port }}: @{{ instance.container_name }}"
+
+- name: Create directories.
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: "directory"
+    recurse: yes
+    owner: "nobody"
+    mode: "0700"
+  no_log: true
+  with_items:
+    - "{{ instance.working_directory }}/db"
+    - "{{ instance.working_directory }}/backups-db"
+    - "{{ instance.working_directory }}/compose"
+  become: true
+
+- name: Render docker-compose.
+  ansible.builtin.template:
+    dest: "{{ instance.working_directory }}/compose/docker-compose.yml"
+    src: docker-compose.yml.j2
+    owner: "root"
+    group: "docker"
+    validate: "docker-compose -f %s config"
+    mode: "0640"
+    backup: yes
+    force: yes
+  become: true
+
+- name: Docker-compose DOWN.
+  community.docker.docker_compose:
+    project_src: "{{ instance.working_directory }}/compose"
+    project_name: "bot-{{ instance.port }}"
+    state: absent
+    timeout: 60
+    files:
+      - docker-compose.yml
+    remove_orphans: yes
+  become: true
+
+- name: Backup data.
+  community.general.archive:
+    path: "{{ instance.working_directory }}/db"
+    format: zip
+    dest: "{{ instance.working_directory }}/backups-db/db-{{ ansible_date_time.epoch }}.zip"
+  become: true
+
+- name: Docker-compose UP.
+  community.docker.docker_compose:
+    project_src: "{{ instance.working_directory }}/compose"
+    project_name: "bot-{{ instance.port }}"
+    state: present
+    stopped: no
+    timeout: 60
+    files:
+      - docker-compose.yml
+    remove_orphans: yes
+  become: true

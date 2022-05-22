@@ -5,3 +5,9 @@ riderModule.iml
 /_ReSharper.Caches/
 .idea/
 .vscode/
+.dockerignore
+.gitlab-ci.yml
+.drone.yml
+README.md
+.git/
+deploy/

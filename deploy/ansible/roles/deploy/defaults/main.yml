@@ -1,0 +1,16 @@
+---
+
+questionnaire_bot_instances:
+  - port: 9000
+    working_directory: "/opt/questionnaire-bot/instances/9000"
+    telegram_token: "xxxxxxx:yyyyyyyyyyyyy"
+    telegram_admin_id: 0
+    quest_container_path: "/app/questions/sample.csv"
+    container_name: "demo_refugee_questionnaire_bot"
+
+docker_pull_registy: "index.docker.io"
+docker_registry_username: "username"
+docker_registry_password: "password"
+
+questionnaire_bot_image_version: "latest"
+questionnaire_bot_docker_network_name: "quest-bot-common"

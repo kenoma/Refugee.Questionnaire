@@ -1,0 +1,69 @@
+---
+kind: pipeline
+type: docker
+name: develop
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: build
+    image: gcr.io/kaniko-project/executor:debug
+    pull: if-not-exists
+    environment:
+      DOCKER_PUSH_REGISTRY:
+        from_secret: "docker_push_registry"
+      DOCKER_CONFIG_JSON:
+        from_secret: "docker_config_json"
+    commands:
+      - echo $${DOCKER_CONFIG_JSON} > /kaniko/.docker/config.json
+      - >-
+        /kaniko/executor
+        --insecure-registry $${DOCKER_PUSH_REGISTRY}
+        --context ./
+        --dockerfile /Dockerfile
+        --target prod
+        --cache=true
+        --cache-repo "$${DOCKER_PUSH_REGISTRY}/refugee/quest-bot-cache"
+        --destination "$${DOCKER_PUSH_REGISTRY}/refugee/quest-bot:$${DRONE_BUILD_NUMBER}"
+      - echo "$${DOCKER_PUSH_REGISTRY}/refugee/quest-bot:$${DRONE_BUILD_NUMBER}"
+    when:
+      branch:
+        - master
+        - develop
+
+  - name: deploy test
+    image: haxorof/ansible:v5-ubuntu
+    pull: if-not-exists
+    user: root
+    environment:
+      ANSIBLE_VAULT_PASS:
+        from_secret: "ansible_vault_password"
+      DOCKER_REGISTRY_USERNAME:
+        from_secret: "docker_registry_username"
+      DOCKER_REGISTRY_PASSWORD:
+        from_secret: "docker_registry_password"
+      DOCKER_PULL_REGISTRY:
+        from_secret: "docker_pull_registry"
+      SSH_KEY:
+        from_secret: "ssh_key"
+    commands:
+      - cd deploy/ansible/
+      - echo $${ANSIBLE_VAULT_PASS} > .vault_pass.txt
+      - eval $(ssh-agent)
+      - echo $${SSH_KEY} | ssh-add -
+      - ansible-galaxy install -r requirements.yml
+      - >-
+        ansible-playbook
+        --user droneci
+        --limit all
+        --extra-vars "docker_pull_registry=$${DOCKER_PULL_REGISTRY}"
+        --extra-vars "docker_registry_username=$${DOCKER_REGISTRY_USERNAME}"
+        --extra-vars "docker_registry_password=$${DOCKER_REGISTRY_PASSWORD}"
+        --extra-vars "questionnaire_bot_image_version=$${DRONE_BUILD_NUMBER}"
+        --skip-tags docker 
+        playbooks/deploy.yml
+    when:
+      branch:
+        - develop

@@ -1,0 +1,11 @@
+---
+
+ansible_host: "{{ vault_ansible_host }}"
+
+questionnaire_bot_instances:
+  - port: 9000
+    working_directory: "/opt/questionnaire-bot/instances/9000"
+    telegram_token: "{{ vault_questionnaire_bot_9000_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9000_telegram_admin_id }}"
+    quest_container_path: "/app/questions/sample.csv"
+    container_name: "demo_refugee_questionnaire_bot"
