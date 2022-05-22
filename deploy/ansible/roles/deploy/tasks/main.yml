@@ -1,0 +1,38 @@
+---
+
+- name: Log into docker registry.
+  community.docker.docker_login:
+    registry_url: "{{ docker_pull_registry }}"
+    username: "{{ docker_registry_username }}"
+    password: "{{ docker_registry_password }}"
+    reauthorize: yes
+    state: present
+  become: true
+
+- name: Pull images.
+  ansible.builtin.command: >-
+    docker pull {{ docker_pull_registry }}/refugee/quest-bot:{{ questionnaire_bot_image_version }}
+  become: true
+
+- name: Enshure the docker network for bots exists.
+  community.docker.docker_network:
+    name: "{{ questionnaire_bot_docker_network_name }}"
+  become: true
+
+- name: Deploy instances.
+  include_tasks: deploy_instance.yml
+  no_log: true
+  with_items: "{{ questionnaire_bot_instances }}"
+  loop_control:
+    loop_var: "instance"
+
+- name: Prune images.
+  ansible.builtin.command: >-
+    docker image prune --all --force
+  become: true
+
+- name: Log out of docker registry.
+  community.docker.docker_login:
+    registry_url: "{{ docker_pull_registry }}"
+    state: absent
+  become: true

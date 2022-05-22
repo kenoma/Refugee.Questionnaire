@@ -1,0 +1,32 @@
+---
+
+version: "3.8"
+
+services:
+  quest-bot-{{ instance.port }}:
+    image: "{{ docker_pull_registry }}/refugee/quest-bot:{{ questionnaire_bot_image_version }}"
+    container_name: {{ instance.container_name }}
+    environment:
+      RQB_TELEGRAM_TOKEN: "{{ instance.telegram_token }}"
+      RQB_TELEGRAM_ADMIN_ID: "{{ instance.telegram_admin_id }}"
+      RQB_QUESTIONS_PATH: "{{ instance.quest_container_path }}"
+      RQB_DB_PATH: "/app/db"
+      RQB_INSTANCE_CONTAINER_NAME: "{{ instance.container_name }}"
+    ports:
+      - "127.0.0.1:{{ instance.port }}:9000/tcp"
+    volumes:
+      - "{{ instance.working_directory }}/db:/app/db"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - "quest-bot-common"
+    restart: unless-stopped
+
+networks:
+  "{{ questionnaire_bot_docker_network_name }}":
+    driver: bridge
+    name: "{{ questionnaire_bot_docker_network_name }}"
+    external: true

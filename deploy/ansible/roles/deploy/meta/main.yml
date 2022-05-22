@@ -1,0 +1,22 @@
+---
+
+dependencies: []
+
+galaxy_info:
+  author: againDDM
+  description: deploy
+
+  license: MIT
+
+  min_ansible_version: "2.12"
+
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+    - name: Ubuntu
+      versions:
+        - focal
+
+  galaxy_tags:
+    - deploy

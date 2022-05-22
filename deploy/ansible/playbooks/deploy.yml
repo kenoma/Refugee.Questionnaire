@@ -1,0 +1,18 @@
+---
+
+- name: docker
+  hosts:
+    - all
+  roles:
+    - docker
+  tags:
+    - docker
+  become: true
+
+- name: deploy
+  hosts:
+    - all
+  roles:
+    - deploy
+  tags:
+    - deploy
