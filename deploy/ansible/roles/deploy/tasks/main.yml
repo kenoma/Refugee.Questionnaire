@@ -1,5 +1,14 @@
 ---
 
+- name: Install pip docker packages.
+  pip:
+    name: "{{ item }}"
+    extra_args: --upgrade
+  with_items:
+    - "docker>=4.4.4"
+    - docker-compose
+  become: true
+
 - name: Log into docker registry.
   community.docker.docker_login:
     registry_url: "{{ docker_pull_registry }}"

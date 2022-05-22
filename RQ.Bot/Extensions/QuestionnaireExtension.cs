@@ -19,10 +19,11 @@ public static class QuestionnaireExtension
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 PrepareHeaderForMatch = args => args.Header.ToLower(),
-                NewLine = Environment.NewLine,
                 MissingFieldFound = null,
                 IgnoreBlankLines = true,
-                BadDataFound = null
+                BadDataFound = null,
+                DetectDelimiter = true,
+                DetectDelimiterValues = new[] { ",", ";", "\t" }
             };
 
             using var reader = new StreamReader(pathToQuest);

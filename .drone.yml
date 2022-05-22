@@ -31,7 +31,7 @@ steps:
     when:
       branch:
         - master
-        - docker
+        - develop
 
   - name: deploy test
     image: haxorof/ansible:v5-ubuntu
@@ -66,4 +66,4 @@ steps:
         playbooks/deploy.yml
     when:
       branch:
-        - docker
+        - develop
