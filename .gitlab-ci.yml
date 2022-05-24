@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
 
 Refugee.Questionnaire.Build:
   stage: build
@@ -13,3 +14,8 @@ Refugee.Questionnaire.Build:
   script:
   - 'dotnet publish RQ.Bot/RQ.Bot.csproj -c Release --self-contained -r win-x64 -o Deployment/win64'
   - 'dotnet publish RQ.Bot/RQ.Bot.csproj -c Release --self-contained -r linux-x64 -o Deployment/linux64'
+    
+Refugee.Questionnaire.CheckQuests:
+  stage: test
+  script:
+    - 'dotnet run --project RQ.ConfigChecker/RQ.ConfigChecker.csproj questions/sample.csv'

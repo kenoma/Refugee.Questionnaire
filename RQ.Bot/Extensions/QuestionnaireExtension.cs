@@ -23,20 +23,27 @@ public static class QuestionnaireExtension
                 IgnoreBlankLines = true,
                 BadDataFound = null,
                 DetectDelimiter = true,
-                DetectDelimiterValues = new[] { ",", ";", "\t" }
+                DetectDelimiterValues = new[] { ",", ";", "\t" },
+                TrimOptions = TrimOptions.InsideQuotes| TrimOptions.Trim,
+                
             };
-
+            
             using var reader = new StreamReader(pathToQuest);
             using var csv = new CsvReader(reader, config);
             var records = csv.GetRecords<QuestionnaireEntry>()
                 .ToArray();
+
+            foreach (var rec in records)
+            {
+                rec.Text = rec.Text.Trim();
+            }
 
             return new Questionnaire
             {
                 Entries = records
             };
         });
-        
+
         return builder;
     }
 }

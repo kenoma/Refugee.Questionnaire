@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RQ.Bot", "RQ.Bot\RQ.Bot.csproj", "{3AA7AB9B-7D7A-401E-BBCA-E6C635C061F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RQ.ConfigChecker", "RQ.ConfigChecker\RQ.ConfigChecker.csproj", "{FEB2C37F-C5CD-44FB-B6EE-4C6F4011ABEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{3AA7AB9B-7D7A-401E-BBCA-E6C635C061F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AA7AB9B-7D7A-401E-BBCA-E6C635C061F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AA7AB9B-7D7A-401E-BBCA-E6C635C061F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEB2C37F-C5CD-44FB-B6EE-4C6F4011ABEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEB2C37F-C5CD-44FB-B6EE-4C6F4011ABEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEB2C37F-C5CD-44FB-B6EE-4C6F4011ABEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEB2C37F-C5CD-44FB-B6EE-4C6F4011ABEE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
