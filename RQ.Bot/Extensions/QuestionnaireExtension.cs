@@ -15,7 +15,7 @@ public static class QuestionnaireExtension
 
             if (string.IsNullOrWhiteSpace(pathToQuest))
                 throw new InvalidProgramException("Specify --pathToQuest argument");
-
+            
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 PrepareHeaderForMatch = args => args.Header.ToLower(),
@@ -25,18 +25,37 @@ public static class QuestionnaireExtension
                 DetectDelimiter = true,
                 DetectDelimiterValues = new[] { ",", ";", "\t" }
             };
-
-            using var reader = new StreamReader(pathToQuest);
-            using var csv = new CsvReader(reader, config);
-            var records = csv.GetRecords<QuestionnaireEntry>()
-                .ToArray();
-
-            return new Questionnaire
+            
+            var checkConfig = builder.Configuration["check-config"];
+            
+            try
             {
-                Entries = records
-            };
+                using var reader = new StreamReader(pathToQuest);
+                using var csv = new CsvReader(reader, config);
+                var records = csv.GetRecords<QuestionnaireEntry>()
+                    .ToArray();
+
+                if (!string.IsNullOrEmpty(checkConfig))
+                {
+                    Environment.Exit(0);
+                }
+
+                return new Questionnaire
+                {
+                    Entries = records
+                };
+            }
+            catch (Exception e)
+            {
+                if (!string.IsNullOrEmpty(checkConfig))
+                {
+                    Environment.Exit(12309);
+                }
+
+                throw;
+            }
         });
-        
+
         return builder;
     }
 }
