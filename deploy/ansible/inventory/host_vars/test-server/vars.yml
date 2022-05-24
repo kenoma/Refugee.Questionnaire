@@ -7,5 +7,11 @@ questionnaire_bot_instances:
     working_directory: "/opt/questionnaire-bot/instances/9000"
     telegram_token: "{{ vault_questionnaire_bot_9000_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9000_telegram_admin_id }}"
-    quest_container_path: "/app/questions/sample.csv"
+    quest_container_path: "/app/questions/ref-9000.csv"
     container_name: "demo_refugee_questionnaire_bot"
+  - port: 9100
+    working_directory: "/opt/questionnaire-bot/instances/9100"
+    telegram_token: "{{ vault_questionnaire_bot_9100_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9100_telegram_admin_id }}"
+    quest_container_path: "/app/questions/vol-9100.csv"
+    container_name: "demo_volunteers_bot"

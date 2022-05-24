@@ -46,6 +46,8 @@
     path: "{{ instance.working_directory }}/db"
     format: zip
     dest: "{{ instance.working_directory }}/backups-db/db-{{ ansible_date_time.epoch }}.zip"
+    mode: "0400"
+    owner: "nobody"
   become: true
 
 - name: Docker-compose UP.
