@@ -158,6 +158,7 @@ public class EntryQuestionnaire
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
 
+        _logger.LogInformation("IterateRequestAsync {ChatId} proceed to {Unanswered}", chatId, unanswered);
         var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
 
         if (correspondingEntry != null && correspondingEntry.IsGroupSwitch != 0)
@@ -205,6 +206,7 @@ public class EntryQuestionnaire
             return true;
         }
 
+        
         var unanswered = _questionnaire
             .Entries
             .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
@@ -212,6 +214,8 @@ public class EntryQuestionnaire
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
 
+        _logger.LogInformation("TryProcessStateMachineAsync {UserId} {Unanswered}", userId, unanswered);
+        
         var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
 
         if (correspondingEntry != null && correspondingEntry.IsGroupSwitch != 0)
