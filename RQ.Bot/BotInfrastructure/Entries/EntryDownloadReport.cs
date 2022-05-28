@@ -178,7 +178,7 @@ public class EntryDownloadCsv
             col = 0;
             row++;
             sheet.Cells[row, ++col].Style.Font.Bold = true;
-            sheet.Cells[row, col].Value = $"#{row-1}";
+            sheet.Cells[row, col].Value = row-1;
             foreach (var heading in headings)
             {
                 sheet.Cells[row, ++col].Style.Font.Bold = false;
@@ -191,8 +191,14 @@ public class EntryDownloadCsv
         row = 0;
         foreach (var rec in records)
         {
-            var recSheet = package.Workbook.Worksheets.Add($"#{++row}");
-            var rrow = 0;
+            var recSheet = package.Workbook.Worksheets.Add($"{++row}");
+            
+            recSheet.Cells[1, 1].Style.Font.Bold = true;
+            recSheet.Cells[1, 1].Value = "Номер заявки";
+            recSheet.Cells[1, 2].Style.Font.Bold = true;
+            recSheet.Cells[1, 2].Value = row;
+            
+            var rrow = 1;
             foreach (var kvpair in rec)
             {
                 recSheet.Cells[++rrow, 1].Style.Font.Bold = true;
@@ -201,10 +207,14 @@ public class EntryDownloadCsv
                 recSheet.Cells[rrow, 2].Value = kvpair.Value;
             }
 
-            recSheet.Cells[1, 1, rrow, 2].AutoFitColumns();
+            recSheet.Column(1).Width = 60;
+            recSheet.Column(2).Width = 25;
+            recSheet.Column(2).Style.WrapText = true;
+            recSheet.Column(2).Style.JustifyLastLine = true;
+            recSheet.Column(2).Style.ShrinkToFit = true;
             recSheet.Cells[1, 1, rrow, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
             recSheet.Cells[1, 1, rrow, 2].Style.Border.Bottom.Style = ExcelBorderStyle.Dashed;
-            recSheet.Cells[1, 1, rrow, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            recSheet.Cells[1, 1, rrow, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
         }
 
         await package.SaveAsync();
@@ -220,7 +230,7 @@ public class EntryDownloadCsv
             .ToList();
         var rnd = new Random(Environment.TickCount);
 
-        col = 0;
+        col = 1;
         foreach (var heading in headings)
         {
             ++col;
