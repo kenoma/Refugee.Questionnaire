@@ -15,15 +15,6 @@ public static class ConfiguratorExtension
             configurationBuilder.AddEnvironmentVariables();
             
         });
-            
-        // builder.Host.UseSerilog((ctx, logCfg) =>
-        // {
-        //     //var logSection = ctx.Configuration["loggerSection"] ?? LoggerConvention.DefaultSection;
-        //
-        //     logCfg //.ReadFrom.Configuration(ctx.Configuration)
-        //         .WriteTo.Console(theme: AnsiConsoleTheme.Code).MinimumLevel.Verbose();
-        //
-        // });
         
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();

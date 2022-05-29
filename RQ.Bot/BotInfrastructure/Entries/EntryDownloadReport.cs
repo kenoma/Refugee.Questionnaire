@@ -159,6 +159,11 @@ public class EntryDownloadCsv
         var headings = records.SelectMany(z => z.Keys).Distinct().ToArray();
         var col = 0;
         var row = 1;
+        sheet.Cells[row, ++col].Style.Font.Bold = true;
+        sheet.Cells[row, col].Value = "Номер";
+        sheet.Cells[row, col].Style.Border.BorderAround(ExcelBorderStyle.Thick);
+        sheet.Cells[row, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+        sheet.Cells[row, col].AutoFitColumns();
         foreach (var heading in headings)
         {
             sheet.Cells[row, ++col].Style.Font.Bold = true;
@@ -172,6 +177,8 @@ public class EntryDownloadCsv
         {
             col = 0;
             row++;
+            sheet.Cells[row, ++col].Style.Font.Bold = true;
+            sheet.Cells[row, col].Value = row-1;
             foreach (var heading in headings)
             {
                 sheet.Cells[row, ++col].Style.Font.Bold = false;
@@ -180,6 +187,35 @@ public class EntryDownloadCsv
         }
 
         CheckDuplicates(headings, row, sheet);
+
+        row = 0;
+        foreach (var rec in records)
+        {
+            var recSheet = package.Workbook.Worksheets.Add($"{++row}");
+            
+            recSheet.Cells[1, 1].Style.Font.Bold = true;
+            recSheet.Cells[1, 1].Value = "Номер заявки";
+            recSheet.Cells[1, 2].Style.Font.Bold = true;
+            recSheet.Cells[1, 2].Value = row;
+            
+            var rrow = 1;
+            foreach (var kvpair in rec)
+            {
+                recSheet.Cells[++rrow, 1].Style.Font.Bold = true;
+                recSheet.Cells[rrow, 1].Value = kvpair.Key;
+                recSheet.Cells[rrow, 2].Style.Font.Bold = false;
+                recSheet.Cells[rrow, 2].Value = kvpair.Value;
+            }
+
+            recSheet.Column(1).Width = 60;
+            recSheet.Column(2).Width = 25;
+            recSheet.Column(2).Style.WrapText = true;
+            recSheet.Column(2).Style.JustifyLastLine = true;
+            recSheet.Column(2).Style.ShrinkToFit = true;
+            recSheet.Cells[1, 1, rrow, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+            recSheet.Cells[1, 1, rrow, 2].Style.Border.Bottom.Style = ExcelBorderStyle.Dashed;
+            recSheet.Cells[1, 1, rrow, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+        }
 
         await package.SaveAsync();
         ms.Position = 0;
@@ -194,7 +230,7 @@ public class EntryDownloadCsv
             .ToList();
         var rnd = new Random(Environment.TickCount);
 
-        col = 0;
+        col = 1;
         foreach (var heading in headings)
         {
             ++col;

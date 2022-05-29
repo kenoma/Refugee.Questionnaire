@@ -5,7 +5,8 @@ version: "3.8"
 services:
   quest-bot-{{ instance.port }}:
     image: "{{ docker_pull_registry }}/refugee/quest-bot:{{ questionnaire_bot_image_version }}"
-    container_name: {{ instance.container_name }}
+    container_name: "{{ instance.container_name }}"
+    hostname: "bot-{{ instance.port }}"
     environment:
       RQB_TELEGRAM_TOKEN: "{{ instance.telegram_token }}"
       RQB_TELEGRAM_ADMIN_ID: "{{ instance.telegram_admin_id }}"

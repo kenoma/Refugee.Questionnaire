@@ -163,7 +163,7 @@ namespace RQ.Bot.BotInfrastructure
 
                 var responce = BotResponce.FromString(callbackQuery.Data!);
 
-                _logger.LogInformation("Received callback {@Callback}", responce);
+                _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
 
                 switch (responce.E)
                 {
