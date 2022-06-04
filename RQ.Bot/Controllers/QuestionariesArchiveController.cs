@@ -40,7 +40,7 @@ namespace RQ.Bot.Controllers
 
             var records = _repo
                 .GetAllRequests()
-                .OrderByDescending(z => z.TimeStamp);
+                .OrderBy(z => z.TimeStamp);
 
             return Ok(records);
         }
@@ -63,7 +63,8 @@ namespace RQ.Bot.Controllers
                 return Unauthorized();
             }
 
-            var records = _repo.GetAllUsers();
+            var records = _repo.GetAllUsers()
+                .OrderBy(z=>z.Created);
 
             return Ok(records);
         }

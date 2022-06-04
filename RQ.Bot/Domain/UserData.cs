@@ -31,5 +31,5 @@ public class UserData
     /// <summary>
     ///     Дата\время создания пользователя
     /// </summary>
-    public DateTime Created { get; set; } = DateTime.Now;
+    public DateTime Created { get; set; } = DateTime.MinValue;
 }
