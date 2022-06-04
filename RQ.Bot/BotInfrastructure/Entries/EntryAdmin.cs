@@ -111,7 +111,8 @@ internal class EntryAdmin
                     Username = user.Username!,
                     FirstName = user.FirstName,
                     LastName = user.LastName!,
-                    PromotedByUser = -1
+                    PromotedByUser = -1,
+                    Created = DateTime.Now
                 });
             }
             else
@@ -198,7 +199,8 @@ internal class EntryAdmin
                 Username = user.Username!,
                 FirstName = user.FirstName,
                 LastName = user.LastName!,
-                PromotedByUser = -1
+                PromotedByUser = -1,
+                Created = DateTime.Now
             });
         }
         else
@@ -243,12 +245,9 @@ internal class EntryAdmin
         while (counter != revokedList.Count)
         {
             counter = revokedList.Count;
-            foreach (var user in users)
+            foreach (var user in users.Where(z => revokedList.Contains(z.PromotedByUser)))
             {
-                if (revokedList.Contains(user.PromotedByUser))
-                {
-                    revokedList.Add(user.UserId);
-                }
+                revokedList.Add(user.UserId);
             }
         }
 
