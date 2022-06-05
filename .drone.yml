@@ -34,7 +34,7 @@ steps:
         - develop
 
   - name: deploy test
-    image: haxorof/ansible:v5-ubuntu
+    image: againddm/ci-ansible:5.8.0
     pull: if-not-exists
     user: root
     environment:
