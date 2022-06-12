@@ -10,11 +10,11 @@ services:
     deploy:
       resources:
         reservations:
-          cpus: "{{ questionnaire_bot_docker_cpus_reserv }}"
-          memory: "{{ questionnaire_bot_docker_memory_reserv }}"
+          cpus: "{{ instance.cpus_reserv | default(questionnaire_bot_docker_cpus_reserv) }}"
+          memory: "{{ instance.memory_reserv | default(questionnaire_bot_docker_memory_reserv) }}"
         limits:
-          cpus: "{{ questionnaire_bot_docker_cpus_limit }}"
-          memory: "{{ questionnaire_bot_docker_memory_limit }}"
+          cpus: "{{ instance.cpus_limit | default(questionnaire_bot_docker_cpus_limit) }}"
+          memory: "{{ instance.memory_limit | default(questionnaire_bot_docker_memory_limit) }}"
     environment:
       RQB_TELEGRAM_TOKEN: "{{ instance.telegram_token }}"
       RQB_TELEGRAM_ADMIN_ID: "{{ instance.telegram_admin_id }}"
