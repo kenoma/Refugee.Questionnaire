@@ -5,6 +5,8 @@ public class RefRequest
     public Guid Id { get; set; } = Guid.NewGuid();
 
     public long UserId { get; set; }
+    
+    public long ChatId { get; set; }
 
     public DateTime TimeStamp { get; set; } = DateTime.Now;
 

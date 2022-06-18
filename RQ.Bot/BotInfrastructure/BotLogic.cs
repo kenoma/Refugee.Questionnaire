@@ -63,7 +63,7 @@ namespace RQ.Bot.BotInfrastructure
                     // UpdateType.EditedChannelPost:
                     // UpdateType.ShippingQuery:
                     // UpdateType.PreCheckoutQuery:
-                    // UpdateType.Poll:
+                    // UpdateType.Poll => BotOnPoll(update.Poll!),
                     _ => UnknownUpdateHandlerAsync(update)
                 };
 
@@ -76,10 +76,11 @@ namespace RQ.Bot.BotInfrastructure
             }
         }
 
-        private Task BotOnPollAnswer(PollAnswer updatePollAnswer)
+      
+        private async Task BotOnPollAnswer(PollAnswer updatePollAnswer)
         {
             _logger.LogInformation("New vote {@Vote}", updatePollAnswer);
-            return Task.CompletedTask;
+            await _entryQuestionnaire.ProcessPoll(updatePollAnswer);
         }
 
         private async Task BotOnMessageReceived(Message message)
@@ -124,7 +125,7 @@ namespace RQ.Bot.BotInfrastructure
                         .Split(new[] { " ", "@" }, StringSplitOptions.RemoveEmptyEntries).First()) switch
                     {
                         "/admin" => _entryAdmin.StartLaborAsync(message.Chat!, user),
-                        "/request" => _entryQuestionnaire.FillLatestRequestAsync(user),
+                        "/request" => _entryQuestionnaire.FillLatestRequestAsync(message.Chat!, user),
                         _ => Usage(message)
                     };
 
@@ -173,7 +174,7 @@ namespace RQ.Bot.BotInfrastructure
                         break;
                         
                     case "fill_request":
-                        await _entryQuestionnaire.FillLatestRequestAsync(user);
+                        await _entryQuestionnaire.FillLatestRequestAsync(callbackQuery.Message?.Chat, user);
 
                         break;
                         
@@ -230,16 +231,6 @@ namespace RQ.Bot.BotInfrastructure
                     case "remove_user":
                         await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
                         break;
-                    case "q_switch_yes":
-                        await _entryQuestionnaire.PassSwitch(callbackQuery.Message?.Chat!, user, int.Parse(responce.P),
-                            true);
-                        break;
-                    case "q_switch_no":
-                        await _entryQuestionnaire.PassSwitch(callbackQuery.Message?.Chat!, user, int.Parse(responce.P),
-                            false);
-                        break;
-                        
-                        
                 }
             }
             catch (Exception e)

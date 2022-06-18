@@ -110,11 +110,10 @@ public class EntryQuestionnaire
         );
     }
 
-    public async Task FillLatestRequestAsync(User user)
+    public async Task FillLatestRequestAsync(ChatId chatId, User user)
     {
         if (user == null)
             return;
-
 
         if (_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
         {
@@ -131,6 +130,7 @@ public class EntryQuestionnaire
 
         var request = new RefRequest
         {
+            ChatId = chatId.Identifier ?? 0L,
             UserId = user.Id,
             IsCompleted = false,
             TimeStamp = DateTime.Now
@@ -143,9 +143,12 @@ public class EntryQuestionnaire
 
     private async Task IterateRequestAsync(ChatId chatId, RefRequest refRequest)
     {
-        var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
+        if (await PollStage(refRequest, chatId))
+            return;
         
-        if (!_questionnaire.Entries.Select(z=>z.Text).Except(answered).Any())
+        var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
+
+        if (!_questionnaire.Entries.Select(z => z.Text).Except(answered).Any())
         {
             await CompleteAsync(chatId, refRequest.UserId);
             return;
@@ -159,14 +162,7 @@ public class EntryQuestionnaire
             .FirstOrDefault();
 
         _logger.LogInformation("IterateRequestAsync {ChatId} proceed to {Unanswered}", chatId, unanswered);
-        var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
 
-        if (correspondingEntry != null && correspondingEntry.IsGroupSwitch != 0)
-        {
-            await DrawSwitch(chatId, correspondingEntry);
-            return;
-        }
-        
         if (unanswered == null)
         {
             _repo.UpdateRefRequest(refRequest);
@@ -198,15 +194,14 @@ public class EntryQuestionnaire
         {
             return false;
         }
-        
+
         var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
-        if (!_questionnaire.Entries.Select(z=>z.Text).Except(answered).Any())
+        if (!_questionnaire.Entries.Select(z => z.Text).Except(answered).Any())
         {
             await CompleteAsync(chatId, refRequest.UserId);
             return true;
         }
 
-        
         var unanswered = _questionnaire
             .Entries
             .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
@@ -215,20 +210,14 @@ public class EntryQuestionnaire
             .FirstOrDefault();
 
         _logger.LogInformation("TryProcessStateMachineAsync {UserId} {Unanswered}", userId, unanswered);
-        
+
         var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
 
-        if (correspondingEntry != null && correspondingEntry.IsGroupSwitch != 0)
+        if ((string.IsNullOrEmpty(unanswered) ||
+             !string.IsNullOrWhiteSpace(correspondingEntry?.Category))
+            && await DrawCategories(chatId, refRequest))
         {
-            await DrawSwitch(chatId, correspondingEntry);
             return true;
-        }
-
-        if (string.IsNullOrEmpty(unanswered) ||
-            !string.IsNullOrWhiteSpace(correspondingEntry.Category))
-        {
-            if (await DrawCategories(chatId, refRequest))
-                return true;
         }
 
         if (unanswered == null || string.IsNullOrWhiteSpace(messageText))
@@ -266,22 +255,7 @@ public class EntryQuestionnaire
         return true;
     }
 
-    private async Task DrawSwitch(ChatId chatId, QuestionnaireEntry correspondingEntry)
-    {
-        var buttons = new[]
-        {
-            InlineKeyboardButton.WithCallbackData("Да", BotResponce.Create("q_switch_yes", correspondingEntry.Group)),
-            InlineKeyboardButton.WithCallbackData("Нет", BotResponce.Create("q_switch_no", correspondingEntry.Group))
-        };
-
-        await _botClient.SendTextMessageAsync(
-            chatId: chatId,
-            parseMode: ParseMode.Html,
-            text: correspondingEntry.Text,
-            replyMarkup: new InlineKeyboardMarkup(buttons),
-            disableWebPagePreview: false
-        );
-    }
+    
 
     private async Task<bool> DrawCategories(ChatId chatId, RefRequest refRequest)
     {
@@ -485,37 +459,80 @@ public class EntryQuestionnaire
         await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
     }
 
-    public async Task PassSwitch(ChatId messageChat, User user, int entryGroup, bool pass)
+    private async Task<bool> PollStage(RefRequest refRequest, ChatId chatId)
     {
+        var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch != 0).ToArray();
+
+        if (!switches.Any())
+            return false;
+
+        var actualSwitches = switches.Select(z => z.Text).Except(refRequest.Answers.Select(z => z.Question)).ToArray();
+
+        if (!actualSwitches.Any())
+            return false;
+
+        var pollQuestions = actualSwitches
+            .Take(9)
+            .Select(z => string.Concat(z.Take(100)))
+            .Concat(new[] { "Ничего из вышеперечисленного" })
+            .ToArray();
+
+        await _botClient.SendPollAsync(
+            chatId: chatId,
+            question: "Выберите категории:",
+            pollQuestions,
+            allowsMultipleAnswers: true,
+            isAnonymous: false
+        );
+
+        return true;
+    }
+
+    public async Task ProcessPoll(PollAnswer updatePollAnswer)
+    {
+        var user = updatePollAnswer.User;
+        
         if (!_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
-        {
             return;
-        }
+        
+        var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch != 0).ToArray();
 
-        var switchEntry = _questionnaire
-            .Entries
-            .FirstOrDefault(z => z.IsGroupSwitch != 0 && z.Group == entryGroup);
+        var activeSwitches = switches.Select(z => z.Text).Except(refRequest.Answers.Select(z => z.Question)).Take(9).ToArray();
 
-        refRequest.Answers = refRequest.Answers.Concat(new[]
+        for (var switchIndex = 0; switchIndex < activeSwitches.Length; switchIndex++)
         {
-            new RefRequestEntry
+            var s = activeSwitches[switchIndex];
+            if (!updatePollAnswer.OptionIds.Contains(9) && updatePollAnswer.OptionIds.Contains(switchIndex))
             {
-                Question = switchEntry!.Text,
-                Answer = pass ? "Да" : "Нет"
+                refRequest.Answers = refRequest.Answers.Concat(new[]
+                {
+                    new RefRequestEntry
+                    {
+                        Question = s,
+                        Answer = "✓"
+                    }
+                }).ToArray();
             }
-        }).ToArray();
-        _repo.UpdateRefRequest(refRequest);
+            else
+            {
+                var group = switches.First(z => z.Text == s).Group;
 
-        if (!pass)
-        {
-            var notPassedEntries = _questionnaire
-                .Entries.Where(z => z.IsGroupSwitch == 0 && z.Group == entryGroup)
-                .Select(entryToNotPass => new RefRequestEntry { Question = entryToNotPass.Text, Answer = "-" })
-                .ToList();
-            refRequest.Answers = refRequest.Answers.Concat(notPassedEntries).ToArray();
-            _repo.UpdateRefRequest(refRequest);
+                foreach (var entry in _questionnaire.Entries.Where(z => z.Group == group))
+                {
+                    refRequest.Answers = refRequest.Answers.Concat(new[]
+                    {
+                        new RefRequestEntry
+                        {
+                            Question = entry.Text,
+                            Answer = "-"
+                        }
+                    }).ToArray();
+                }
+            }
         }
 
-        await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
+        _repo.UpdateRefRequest(refRequest);
+        
+        await IterateRequestAsync(refRequest.ChatId, refRequest);
     }
 }
