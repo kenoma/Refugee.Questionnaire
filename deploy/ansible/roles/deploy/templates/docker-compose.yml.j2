@@ -1,12 +1,20 @@
 ---
 
-version: "3.8"
+version: "3.9"
 
 services:
   quest-bot-{{ instance.port }}:
     image: "{{ docker_pull_registry }}/refugee/quest-bot:{{ questionnaire_bot_image_version }}"
     container_name: "{{ instance.container_name }}"
     hostname: "bot-{{ instance.port }}"
+    deploy:
+      resources:
+        reservations:
+          cpus: "{{ instance.cpus_reserv | default(questionnaire_bot_docker_cpus_reserv) }}"
+          memory: "{{ instance.memory_reserv | default(questionnaire_bot_docker_memory_reserv) }}"
+        limits:
+          cpus: "{{ instance.cpus_limit | default(questionnaire_bot_docker_cpus_limit) }}"
+          memory: "{{ instance.memory_limit | default(questionnaire_bot_docker_memory_limit) }}"
     environment:
       RQB_TELEGRAM_TOKEN: "{{ instance.telegram_token }}"
       RQB_TELEGRAM_ADMIN_ID: "{{ instance.telegram_admin_id }}"

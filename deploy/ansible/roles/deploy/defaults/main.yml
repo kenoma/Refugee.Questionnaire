@@ -6,6 +6,7 @@ questionnaire_bot_instances:
     telegram_token: "xxxxxxx:yyyyyyyyyyyyy"
     telegram_admin_id: 0
     quest_container_path: "/app/questions/sample.csv"
+    enabled: no
     container_name: "demo_refugee_questionnaire_bot"
 
 docker_pull_registy: "index.docker.io"
@@ -14,3 +15,7 @@ docker_registry_password: "password"
 
 questionnaire_bot_image_version: "latest"
 questionnaire_bot_docker_network_name: "quest-bot-common"
+questionnaire_bot_docker_cpus_reserv: "0.010"
+questionnaire_bot_docker_memory_reserv: "40M"
+questionnaire_bot_docker_cpus_limit: "0.025"
+questionnaire_bot_docker_memory_limit: "64M"
