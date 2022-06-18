@@ -143,9 +143,6 @@ public class EntryQuestionnaire
 
     private async Task IterateRequestAsync(ChatId chatId, RefRequest refRequest)
     {
-        if (await PollStage(refRequest, chatId))
-            return;
-        
         var answered = refRequest.Answers.Select(z => z.Question).ToHashSet();
 
         if (!_questionnaire.Entries.Select(z => z.Text).Except(answered).Any())
@@ -160,6 +157,14 @@ public class EntryQuestionnaire
             .Select(z => z.Text)
             .Except(refRequest.Answers.Select(z => z.Question))
             .FirstOrDefault();
+
+        var isZeroGroup = _questionnaire
+            .Entries
+            .Where(z => unanswered.Contains(z.Text))
+            .Any(z => z.Group == 0);
+
+        if (!isZeroGroup && await PollStage(refRequest, chatId))
+            return;
 
         _logger.LogInformation("IterateRequestAsync {ChatId} proceed to {Unanswered}", chatId, unanswered);
 
@@ -479,7 +484,7 @@ public class EntryQuestionnaire
 
         await _botClient.SendPollAsync(
             chatId: chatId,
-            question: "Выберите категории:",
+            question: "Ответьте, пожалуйста, на следующие вопросы (если да -  поставьте галочку в соответствующем пункте):",
             pollQuestions,
             allowsMultipleAnswers: true,
             isAnonymous: false
