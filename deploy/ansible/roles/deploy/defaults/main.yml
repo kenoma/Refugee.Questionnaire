@@ -6,6 +6,7 @@ questionnaire_bot_instances:
     telegram_token: "xxxxxxx:yyyyyyyyyyyyy"
     telegram_admin_id: 0
     quest_container_path: "/app/questions/sample.csv"
+    enabled: no
     container_name: "demo_refugee_questionnaire_bot"
 
 docker_pull_registy: "index.docker.io"

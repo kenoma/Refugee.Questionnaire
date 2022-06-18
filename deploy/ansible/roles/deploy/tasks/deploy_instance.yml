@@ -61,3 +61,5 @@
       - docker-compose.yml
     remove_orphans: yes
   become: true
+  when:
+    - instance.enabled
