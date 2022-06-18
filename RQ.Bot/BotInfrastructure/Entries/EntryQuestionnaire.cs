@@ -484,7 +484,7 @@ public class EntryQuestionnaire
 
         await _botClient.SendPollAsync(
             chatId: chatId,
-            question: "Ответьте, пожалуйста, на следующие вопросы (если да -  поставьте галочку в соответствующем пункте):",
+            question: "Ответьте, пожалуйста, на следующие вопросы (если да -  поставьте галочку в соответствующих пунктах, а затем нажмите на кнопку \"Голосовать\" / \"Vote\"):",
             pollQuestions,
             allowsMultipleAnswers: true,
             isAnonymous: false
