@@ -3,12 +3,13 @@
 ansible_host: "{{ vault_ansible_host }}"
 
 questionnaire_bot_instances:
-  # - port: 9025
-  #   working_directory: "/opt/questionnaire-bot/instances/9025"
-  #   telegram_token: "{{ vault_questionnaire_bot_9025_telegram_token }}"
-  #   telegram_admin_id: "{{ vault_questionnaire_bot_9025_telegram_admin_id }}"
-  #   quest_container_path: "/app/questions/ref-9025.csv"
-  #   container_name: "help_refugees_vladivostok_bot"
+  - port: 9025
+    working_directory: "/opt/questionnaire-bot/instances/9025"
+    telegram_token: "{{ vault_questionnaire_bot_9025_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9025_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9025.csv"
+    enabled: no
+    container_name: "help_refugees_vladivostok_bot"
   - port: 9031
     working_directory: "/opt/questionnaire-bot/instances/9031"
     telegram_token: "{{ vault_questionnaire_bot_9031_telegram_token }}"
@@ -16,25 +17,29 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/ref-9031.csv"
     memory_limit: "256M"
     cpus_limit: "0.75"
+    enabled: yes
     container_name: "help_refugees_bot"
   - port: 9231
     working_directory: "/opt/questionnaire-bot/instances/9231"
     telegram_token: "{{ vault_questionnaire_bot_9231_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9231_telegram_admin_id }}"
     quest_container_path: "/app/questions/ref-9231-oskol.csv"
+    enabled: yes
     container_name: "help_refugees_StariyOskol_bot"
-  # - port: 9036
-  #   working_directory: "/opt/questionnaire-bot/instances/9036"
-  #   telegram_token: "{{ vault_questionnaire_bot_9036_telegram_token }}"
-  #   telegram_admin_id: "{{ vault_questionnaire_bot_9036_telegram_admin_id }}"
-  #   quest_container_path: "/app/questions/ref-9036.csv"
-  #   container_name: "help_refugees_voronezh_bot"
-  # - port: 9125
-  #   working_directory: "/opt/questionnaire-bot/instances/9125"
-  #   telegram_token: "{{ vault_questionnaire_bot_9125_telegram_token }}"
-  #   telegram_admin_id: "{{ vault_questionnaire_bot_9125_telegram_admin_id }}"
-  #   quest_container_path: "/app/questions/vol-9125.csv"
-  #   container_name: "volunteers_vladivostok_bot"
+  - port: 9036
+    working_directory: "/opt/questionnaire-bot/instances/9036"
+    telegram_token: "{{ vault_questionnaire_bot_9036_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9036_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9036.csv"
+    enabled: no
+    container_name: "help_refugees_voronezh_bot"
+  - port: 9125
+    working_directory: "/opt/questionnaire-bot/instances/9125"
+    telegram_token: "{{ vault_questionnaire_bot_9125_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9125_telegram_admin_id }}"
+    quest_container_path: "/app/questions/vol-9125.csv"
+    enabled: no
+    container_name: "volunteers_vladivostok_bot"
   - port: 9131
     working_directory: "/opt/questionnaire-bot/instances/9131"
     telegram_token: "{{ vault_questionnaire_bot_9131_telegram_token }}"
@@ -42,16 +47,19 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/vol-9131.csv"
     memory_limit: "256M"
     cpus_limit: "0.75"
+    enabled: yes
     container_name: "volunteers_31_bot"
   - port: 9331
     working_directory: "/opt/questionnaire-bot/instances/9331"
     telegram_token: "{{ vault_questionnaire_bot_9331_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9331_telegram_admin_id }}"
     quest_container_path: "/app/questions/vol-9331-oskol.csv"
+    enabled: yes
     container_name: "volunteers_StariyOskol_bot"
-  # - port: 9136
-  #   working_directory: "/opt/questionnaire-bot/instances/9136"
-  #   telegram_token: "{{ vault_questionnaire_bot_9136_telegram_token }}"
-  #   telegram_admin_id: "{{ vault_questionnaire_bot_9136_telegram_admin_id }}"
-  #   quest_container_path: "/app/questions/vol-9136.csv"
-  #   container_name: "volunteers_voronezh_bot"
+  - port: 9136
+    working_directory: "/opt/questionnaire-bot/instances/9136"
+    telegram_token: "{{ vault_questionnaire_bot_9136_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9136_telegram_admin_id }}"
+    quest_container_path: "/app/questions/vol-9136.csv"
+    enabled: no
+    container_name: "volunteers_voronezh_bot"
