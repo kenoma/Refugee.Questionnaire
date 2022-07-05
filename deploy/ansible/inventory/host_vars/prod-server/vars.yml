@@ -33,6 +33,13 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/ref-9036.csv"
     enabled: no
     container_name: "help_refugees_voronezh_bot"
+  - port: 9082
+    working_directory: "/opt/questionnaire-bot/instances/9082"
+    telegram_token: "{{ vault_questionnaire_bot_9082_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9082_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9082.csv"
+    enabled: yes
+    container_name: "help_refugees_KrimYalta_bot"
   - port: 9125
     working_directory: "/opt/questionnaire-bot/instances/9125"
     telegram_token: "{{ vault_questionnaire_bot_9125_telegram_token }}"
