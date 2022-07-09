@@ -30,12 +30,7 @@ internal class EntryAdmin
             var noAuthText =
                 $"Вас нет в списках доверенных пользователей, администраторы осведомлены о вас.";
 
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Markdown,
-                text: noAuthText,
-                disableWebPagePreview: false
-            );
+            await NotifyAdmin(chatId, noAuthText);
 
             var adminList = _repo.GetAdminUsers();
 
@@ -45,20 +40,14 @@ internal class EntryAdmin
                 {
                     InlineKeyboardButton.WithCallbackData("Дать админа", BotResponce.Create("add_permitions", user.Id)),
                 });
-
-                await _botClient.SendTextMessageAsync(
-                    chatId: admin.ChatId,
-                    parseMode: ParseMode.Html,
-                    text:
+                await NotifyAdmin(admin.ChatId,
                     $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
-                    replyMarkup: inlineKeyboard,
-                    disableWebPagePreview: false
-                );
+                    inlineKeyboard);
             }
         }
         else
         {
-            var inlineKeyboard = new InlineKeyboardMarkup(new InlineKeyboardButton[][]
+            var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
@@ -86,14 +75,9 @@ internal class EntryAdmin
                 }
             });
 
-            await _botClient.SendTextMessageAsync(
-                chatId: rfUser.ChatId,
-                parseMode: ParseMode.Markdown,
-                text:
+            await NotifyAdmin(rfUser.ChatId,
                 $"Ваш уникальный токен для работы с API: `{rfUser.Token}`\r\n Заявки, отправленные в архив доступны к скачиванию через функцию скачивания всех заявок",
-                replyMarkup: inlineKeyboard,
-                disableWebPagePreview: false
-            );
+                inlineKeyboard);
         }
     }
 
@@ -121,12 +105,8 @@ internal class EntryAdmin
                 _repo.UpsertUser(userData);
             }
 
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Html,
-                text: "Вы первый пользователь бота, вам автоматически выданы администраторские привелегии.",
-                disableWebPagePreview: false
-            );
+            await NotifyAdmin(chatId,
+                "Вы первый пользователь бота, вам автоматически выданы администраторские привелегии.");
         }
 
         return _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdmin;
@@ -145,21 +125,12 @@ internal class EntryAdmin
 
             foreach (var admin in adminList)
             {
-                await _botClient.SendTextMessageAsync(
-                    chatId: admin.ChatId,
-                    parseMode: ParseMode.Html,
-                    text:
-                    $"Пользователь @{rfUser.Username} повышен до администратора пользователем @{adminUser.Username}.",
-                    disableWebPagePreview: false
-                );
+                await NotifyAdmin(admin.ChatId,
+                    $"Пользователь @{rfUser.Username} повышен до администратора пользователем @{adminUser.Username}.");
             }
 
-            await _botClient.SendTextMessageAsync(
-                chatId: rfUser.ChatId,
-                parseMode: ParseMode.Html,
-                text: $"Вам выданы права администратора пользователем @{adminUser.Username}",
-                disableWebPagePreview: false
-            );
+            await NotifyAdmin(rfUser.ChatId,
+                $"Вам выданы права администратора пользователем @{adminUser.Username}");
         }
     }
 
@@ -169,21 +140,11 @@ internal class EntryAdmin
         {
             _repo.ArchiveCurrentRequests();
 
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Html,
-                text: "Текущие запросы отправлены в архив",
-                disableWebPagePreview: false
-            );
+            await NotifyAdmin(chatId, "Текущие запросы отправлены в архив");
         }
         else
         {
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Html,
-                text: "Вы не являетесь администратором",
-                disableWebPagePreview: false
-            );
+            await NotifyAdmin(chatId, "Вы не являетесь администратором");
         }
     }
 
@@ -225,14 +186,7 @@ internal class EntryAdmin
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
 
-        await _botClient.SendTextMessageAsync(
-            chatId: messageChat,
-            parseMode: ParseMode.Html,
-            text:
-            "Список администраторов, назначенных вами",
-            replyMarkup: inlineKeyboard,
-            disableWebPagePreview: false
-        );
+        await NotifyAdmin(messageChat, "Список администраторов, назначенных вами", inlineKeyboard);
     }
 
     public async Task RevokeAdminAsync(ChatId messageChat, long userId)
@@ -257,14 +211,26 @@ internal class EntryAdmin
             user.IsAdmin = false;
             user.PromotedByUser = 0;
             _repo.UpsertUser(user);
-            await _botClient.SendTextMessageAsync(
-                chatId: user.ChatId,
-                parseMode: ParseMode.Html,
-                text:
-                "Вас лишили прав администратора",
-                disableWebPagePreview: false
-            );
+            await NotifyAdmin(user.ChatId, "Вас лишили прав администратора");
             _logger.LogInformation("User {UserId} was removed from admin list", user.UserId);
+        }
+    }
+
+    private async Task NotifyAdmin(ChatId chatId, string msg, InlineKeyboardMarkup inlineKeyboardMarkup = default)
+    {
+        try
+        {
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                parseMode: ParseMode.Html,
+                text: msg,
+                disableWebPagePreview: false,
+                replyMarkup: inlineKeyboardMarkup
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning("Failed to send message to {ChatId} : {Reason}", chatId, e.Message);
         }
     }
 }
