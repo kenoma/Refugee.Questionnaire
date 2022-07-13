@@ -16,6 +16,13 @@ public static class ConfiguratorExtension
             
         });
         
+        builder.Logging.AddSimpleConsole(options =>
+        {
+            options.IncludeScopes = true;
+            options.SingleLine = true;
+            options.TimestampFormat = "dd:MM:yyyy hh:mm:ss ";
+        });
+        
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
