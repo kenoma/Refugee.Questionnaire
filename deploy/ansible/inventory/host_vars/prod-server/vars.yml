@@ -70,3 +70,10 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/vol-9136.csv"
     enabled: no
     container_name: "volunteers_voronezh_bot"
+  - port: 9431
+    working_directory: "/opt/questionnaire-bot/instances/9431"
+    telegram_token: "{{ vault_questionnaire_bot_9431_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9431_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9431.csv"
+    enabled: yes
+    container_name: "help_refugees_school31_bot"

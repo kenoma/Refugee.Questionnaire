@@ -69,7 +69,7 @@ steps:
         - develop
 
   - name: deploy prod
-    image: haxorof/ansible:v5-ubuntu
+    image: againddm/ci-ansible:5.8.0
     pull: if-not-exists
     user: root
     environment:
