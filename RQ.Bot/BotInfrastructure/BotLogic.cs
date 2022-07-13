@@ -99,6 +99,11 @@ namespace RQ.Bot.BotInfrastructure
             if (message.Type != MessageType.Text)
                 return;
 
+            if (await _entryAdmin.IsMessageRequest(message.Chat.Id, user.Id, message.Text!))
+            {
+                return;
+            }
+
             if ((message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true) &&
                 (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text!)))
             {
@@ -144,6 +149,7 @@ namespace RQ.Bot.BotInfrastructure
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("fill_request")),
+                InlineKeyboardButton.WithCallbackData("Написать администраторам", BotResponce.Create("message_to_admins")),
             });
 
             await _bot.SendTextMessageAsync(
@@ -230,6 +236,9 @@ namespace RQ.Bot.BotInfrastructure
                         
                     case "remove_user":
                         await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
+                        break;
+                    case "message_to_admins":
+                        await _entryAdmin.WaitForMessageAsync(callbackQuery.Message?.Chat!, user);
                         break;
                 }
             }

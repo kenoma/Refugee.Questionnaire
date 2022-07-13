@@ -32,4 +32,6 @@ public class UserData
     ///     Дата\время создания пользователя
     /// </summary>
     public DateTime Created { get; set; } = DateTime.MinValue;
+
+    public bool IsMessageToAdminsRequest { get; set; }
 }

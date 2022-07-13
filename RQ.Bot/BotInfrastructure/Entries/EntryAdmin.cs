@@ -233,4 +233,43 @@ internal class EntryAdmin
             _logger.LogWarning("Failed to send message to {ChatId} : {Reason}", chatId, e.Message);
         }
     }
+
+    public async Task WaitForMessageAsync(Chat chatId, User user)
+    {
+        if (_repo.TryGetUserById(user.Id, out var userData))
+        {
+            userData.IsMessageToAdminsRequest = true;
+            _repo.UpsertUser(userData);
+            await NotifyAdmin(chatId, "Напишите сообщение, которое будет передано администраторам:");
+            _logger.LogInformation("User {UserId} asks for help", user.Id);
+        }
+        else
+        {
+            _logger.LogInformation("Failed to get user {UserId} data", user.Id);
+        }
+    }
+
+    public async Task<bool> IsMessageRequest(long chatId, long userId, string messageText)
+    {
+        if (!_repo.TryGetUserById(userId, out var userData))
+            return false;
+        
+        if (!userData.IsMessageToAdminsRequest)
+            return false;
+
+        userData.IsMessageToAdminsRequest = false;
+        _repo.UpsertUser(userData);
+
+        var adminList = _repo.GetAdminUsers();
+
+        foreach (var admin in adminList)
+        {
+            await NotifyAdmin(admin.ChatId,
+                $"Пользователь @{userData.Username} ({userData.UserId}) отправил сообщение администраторам: {messageText}");
+        }
+
+        await NotifyAdmin(chatId, "Ваше сообщение отправлено администраторам.");
+        _logger.LogInformation("User {UserId} send message", userId);
+        return true;
+    }
 }
