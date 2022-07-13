@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.Logging.Console;
 
 namespace RQ.Bot.Extensions;
 
@@ -20,6 +21,7 @@ public static class ConfiguratorExtension
         {
             options.IncludeScopes = true;
             options.SingleLine = true;
+            options.ColorBehavior = LoggerColorBehavior.Enabled;
             options.TimestampFormat = "dd:MM:yyyy hh:mm:ss ";
         });
         
