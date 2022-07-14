@@ -73,9 +73,10 @@ public class EntryDownloadCsv
             }
 
             foreach (var answ in refRequest.Answers)
-            {
-                record.Add(answ.Question, answ.Answer);
-            }
+                if (!record.TryAdd(answ.Question, answ.Answer))
+                {
+                    record[answ.Question] += answ.Answer;
+                }
 
             records.Add(record);
         }
@@ -114,8 +115,7 @@ public class EntryDownloadCsv
             : dataToRenderXlsx.Where(z => z.IsCompleted).OrderBy(z => z.TimeStamp));
 
         var payload = new InputOnlineFile(ms, $"{(allRequests ? "ВСЕ" : "ТЕКУЩИЕ")}_{DateTime.Now.Ticks}_dataset.xlsx");
-
-
+        
         await _botClient.SendDocumentAsync(
             disableContentTypeDetection: true,
             document: payload,
@@ -143,9 +143,10 @@ public class EntryDownloadCsv
             }
 
             foreach (var answ in refRequest.Answers)
-            {
-                record.TryAdd(answ.Question, answ.Answer);
-            }
+                if (!record.TryAdd(answ.Question, answ.Answer))
+                {
+                    record[answ.Question] += answ.Answer;
+                }
 
             records.Add(record);
         }
