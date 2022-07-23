@@ -103,6 +103,11 @@ namespace RQ.Bot.BotInfrastructure
             {
                 return;
             }
+            
+            if (await _entryAdmin.IsUserReply(message.Chat.Id, user.Id, message.Text!))
+            {
+                return;
+            }
 
             if ((message.Entities?.All(z => z.Type != MessageEntityType.BotCommand) ?? true) &&
                 (await _entryQuestionnaire.TryProcessStateMachineAsync(message.Chat.Id, user.Id, message.Text!)))
@@ -238,8 +243,14 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
                         break;
                     case "message_to_admins":
-                        await _entryAdmin.WaitForMessageAsync(callbackQuery.Message?.Chat!, user);
+                        await _entryAdmin.WaitForMessageToAdminsAsync(callbackQuery.Message?.Chat!, user);
                         break;
+                    
+                    case "reply_to_user":
+                        await _entryAdmin.WaitForMessageToUsersAsync(callbackQuery.Message?.Chat!, user,
+                            long.Parse(responce.P));
+                        break;
+                        
                 }
             }
             catch (Exception e)
