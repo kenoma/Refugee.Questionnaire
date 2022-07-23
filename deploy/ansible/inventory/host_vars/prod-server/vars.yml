@@ -82,5 +82,7 @@ questionnaire_bot_instances:
     telegram_token: "{{ vault_questionnaire_bot_9431_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9431_telegram_admin_id }}"
     quest_container_path: "/app/questions/ref-9431.csv"
+    memory_limit: "256M"
+    cpus_limit: "0.75"
     enabled: yes
     container_name: "help_refugees_school31_bot"
