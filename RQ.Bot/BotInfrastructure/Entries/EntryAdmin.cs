@@ -234,14 +234,31 @@ internal class EntryAdmin
         }
     }
 
-    public async Task WaitForMessageAsync(Chat chatId, User user)
+    public async Task WaitForMessageToAdminsAsync(Chat chatId, User user)
     {
         if (_repo.TryGetUserById(user.Id, out var userData))
         {
             userData.IsMessageToAdminsRequest = true;
+                        
             _repo.UpsertUser(userData);
             await NotifyAdmin(chatId, "Напишите сообщение, которое будет передано администраторам:");
             _logger.LogInformation("User {UserId} asks for help", user.Id);
+        }
+        else
+        {
+            _logger.LogInformation("Failed to get user {UserId} data", user.Id);
+        }
+    }
+
+    public async Task WaitForMessageToUsersAsync(Chat chatId, User user, long userToReply)
+    {
+        if (_repo.TryGetUserById(user.Id, out var userData))
+        {
+            userData.UserToReply = userToReply;
+
+            _repo.UpsertUser(userData);
+            await NotifyAdmin(chatId, "Что ответить пользователю?");
+            _logger.LogInformation("Admin {UserId} going to reply to user", user.Id);
         }
         else
         {
@@ -262,14 +279,46 @@ internal class EntryAdmin
 
         var adminList = _repo.GetAdminUsers();
 
+        var promotedUsers = InlineKeyboardButton.WithCallbackData($"Ответить пользователю",
+            BotResponce.Create("reply_to_user", userData.UserId));
+
+        var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
+        
         foreach (var admin in adminList)
         {
             await NotifyAdmin(admin.ChatId,
-                $"Пользователь @{userData.Username} ({userData.UserId}) отправил сообщение администраторам: {messageText}");
+                $"Пользователь @{userData.Username} ({userData.UserId}) отправил сообщение администраторам: {messageText}",
+                inlineKeyboard);
         }
 
         await NotifyAdmin(chatId, "Ваше сообщение отправлено администраторам.");
-        _logger.LogInformation("User {UserId} send message", userId);
+        _logger.LogInformation("User {UserId} send message: {MessageText}", userId, messageText);
+        return true;
+    }
+    
+    public async Task<bool> IsUserReply(long chatId, long userId, string messageText)
+    {
+        if (!_repo.TryGetUserById(userId, out var userData))
+            return false;
+
+        if (userData.UserToReply == 0)
+            return false;
+
+        var targetUser = userData.UserToReply; 
+        userData.UserToReply = 0;
+        _repo.UpsertUser(userData);
+
+        await NotifyAdmin(targetUser, messageText);
+        
+        var adminList = _repo.GetAdminUsers();
+        
+        foreach (var admin in adminList)
+        {
+            await NotifyAdmin(admin.ChatId,
+                $"Администратор @{userData.Username} ({userData.UserId}) отправил сообщение пользователю ({targetUser}): {messageText}");
+        }
+
+        _logger.LogInformation("User {UserId} send message: {MessageText}", userId, messageText);
         return true;
     }
 }

@@ -34,4 +34,6 @@ public class UserData
     public DateTime Created { get; set; } = DateTime.MinValue;
 
     public bool IsMessageToAdminsRequest { get; set; }
+    
+    public long UserToReply { get; set; }
 }
