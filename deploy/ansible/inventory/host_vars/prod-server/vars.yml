@@ -33,6 +33,13 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/ref-9036.csv"
     enabled: no
     container_name: "help_refugees_voronezh_bot"
+  - port: 9261
+    working_directory: "/opt/questionnaire-bot/instances/9261"
+    telegram_token: "{{ vault_questionnaire_bot_9261_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9261_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9261-shahti.csv"
+    enabled: yes
+    container_name: "help_refugees_Shahti_bot"
   - port: 9082
     working_directory: "/opt/questionnaire-bot/instances/9082"
     telegram_token: "{{ vault_questionnaire_bot_9082_telegram_token }}"
@@ -82,7 +89,12 @@ questionnaire_bot_instances:
     telegram_token: "{{ vault_questionnaire_bot_9431_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9431_telegram_admin_id }}"
     quest_container_path: "/app/questions/ref-9431.csv"
-    memory_limit: "256M"
-    cpus_limit: "0.75"
     enabled: yes
     container_name: "help_refugees_school31_bot"
+  - port: 9531
+    working_directory: "/opt/questionnaire-bot/instances/9531"
+    telegram_token: "{{ vault_questionnaire_bot_9531_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9531_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9531-oskol.csv"
+    enabled: yes
+    container_name: "school_StariyOskol_bot"
