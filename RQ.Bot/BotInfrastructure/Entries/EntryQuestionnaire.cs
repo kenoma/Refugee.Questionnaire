@@ -277,7 +277,7 @@ public class EntryQuestionnaire
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 parseMode: ParseMode.Markdown,
-                text: "Некорректный ответ на вопрос",
+                text: "*⚠⚠⚠ Некорректный ответ на вопрос ⚠⚠⚠*",
                 disableWebPagePreview: false
             );
         }
