@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using RQ.Bot.Extensions.CsvUtils;
 using RQ.DTO;
 
 namespace RQ.Bot.Extensions;
@@ -25,11 +26,12 @@ public static class QuestionnaireExtension
                 DetectDelimiter = true,
                 DetectDelimiterValues = new[] { ",", ";", "\t" },
                 TrimOptions = TrimOptions.InsideQuotes| TrimOptions.Trim,
-                
+                HeaderValidated = null
             };
             
             using var reader = new StreamReader(pathToQuest);
             using var csv = new CsvReader(reader, config);
+            csv.Context.RegisterClassMap<QuestionnaireEntryClassMap>();
             var records = csv.GetRecords<QuestionnaireEntry>()
                 .ToArray();
 

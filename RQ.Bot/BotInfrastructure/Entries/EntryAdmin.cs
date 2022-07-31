@@ -30,7 +30,7 @@ internal class EntryAdmin
             var noAuthText =
                 $"Вас нет в списках доверенных пользователей, администраторы осведомлены о вас.";
 
-            await NotifyAdmin(chatId, noAuthText);
+            await SendMessageToUser(chatId, noAuthText);
 
             var adminList = _repo.GetAdminUsers();
 
@@ -40,7 +40,7 @@ internal class EntryAdmin
                 {
                     InlineKeyboardButton.WithCallbackData("Дать админа", BotResponce.Create("add_permitions", user.Id)),
                 });
-                await NotifyAdmin(admin.ChatId,
+                await SendMessageToUser(admin.ChatId,
                     $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
                     inlineKeyboard);
             }
@@ -75,7 +75,7 @@ internal class EntryAdmin
                 }
             });
 
-            await NotifyAdmin(rfUser.ChatId,
+            await SendMessageToUser(rfUser.ChatId,
                 $"Ваш уникальный токен для работы с API: `{rfUser.Token}`\r\n Заявки, отправленные в архив доступны к скачиванию через функцию скачивания всех заявок",
                 inlineKeyboard);
         }
@@ -105,7 +105,7 @@ internal class EntryAdmin
                 _repo.UpsertUser(userData);
             }
 
-            await NotifyAdmin(chatId,
+            await SendMessageToUser(chatId,
                 "Вы первый пользователь бота, вам автоматически выданы администраторские привелегии.");
         }
 
@@ -125,11 +125,11 @@ internal class EntryAdmin
 
             foreach (var admin in adminList)
             {
-                await NotifyAdmin(admin.ChatId,
+                await SendMessageToUser(admin.ChatId,
                     $"Пользователь @{rfUser.Username} повышен до администратора пользователем @{adminUser.Username}.");
             }
 
-            await NotifyAdmin(rfUser.ChatId,
+            await SendMessageToUser(rfUser.ChatId,
                 $"Вам выданы права администратора пользователем @{adminUser.Username}");
         }
     }
@@ -140,11 +140,11 @@ internal class EntryAdmin
         {
             _repo.ArchiveCurrentRequests();
 
-            await NotifyAdmin(chatId, "Текущие запросы отправлены в архив");
+            await SendMessageToUser(chatId, "Текущие запросы отправлены в архив");
         }
         else
         {
-            await NotifyAdmin(chatId, "Вы не являетесь администратором");
+            await SendMessageToUser(chatId, "Вы не являетесь администратором");
         }
     }
 
@@ -186,7 +186,7 @@ internal class EntryAdmin
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
 
-        await NotifyAdmin(messageChat, "Список администраторов, назначенных вами", inlineKeyboard);
+        await SendMessageToUser(messageChat, "Список администраторов, назначенных вами", inlineKeyboard);
     }
 
     public async Task RevokeAdminAsync(ChatId messageChat, long userId)
@@ -211,12 +211,12 @@ internal class EntryAdmin
             user.IsAdmin = false;
             user.PromotedByUser = 0;
             _repo.UpsertUser(user);
-            await NotifyAdmin(user.ChatId, "Вас лишили прав администратора");
+            await SendMessageToUser(user.ChatId, "Вас лишили прав администратора");
             _logger.LogInformation("User {UserId} was removed from admin list", user.UserId);
         }
     }
 
-    private async Task NotifyAdmin(ChatId chatId, string msg, InlineKeyboardMarkup inlineKeyboardMarkup = default)
+    private async Task SendMessageToUser(ChatId chatId, string msg, InlineKeyboardMarkup inlineKeyboardMarkup = default)
     {
         try
         {
@@ -241,7 +241,7 @@ internal class EntryAdmin
             userData.IsMessageToAdminsRequest = true;
                         
             _repo.UpsertUser(userData);
-            await NotifyAdmin(chatId, "Напишите сообщение, которое будет передано администраторам:");
+            await SendMessageToUser(chatId, "Напишите сообщение, которое будет передано администраторам:");
             _logger.LogInformation("User {UserId} asks for help", user.Id);
         }
         else
@@ -257,7 +257,7 @@ internal class EntryAdmin
             userData.UserToReply = userToReply;
 
             _repo.UpsertUser(userData);
-            await NotifyAdmin(chatId, "Что ответить пользователю?");
+            await SendMessageToUser(chatId, "Что ответить пользователю?");
             _logger.LogInformation("Admin {UserId} going to reply to user", user.Id);
         }
         else
@@ -286,17 +286,17 @@ internal class EntryAdmin
         
         foreach (var admin in adminList)
         {
-            await NotifyAdmin(admin.ChatId,
+            await SendMessageToUser(admin.ChatId,
                 $"Пользователь @{userData.Username} ({userData.UserId}) отправил сообщение администраторам: {messageText}",
                 inlineKeyboard);
         }
 
-        await NotifyAdmin(chatId, "Ваше сообщение отправлено администраторам.");
+        await SendMessageToUser(chatId, "Ваше сообщение отправлено администраторам.");
         _logger.LogInformation("User {UserId} send message: {MessageText}", userId, messageText);
         return true;
     }
     
-    public async Task<bool> IsUserReply(long chatId, long userId, string messageText)
+    public async Task<bool> IsUserReplied(long userId, string messageText)
     {
         if (!_repo.TryGetUserById(userId, out var userData))
             return false;
@@ -308,13 +308,18 @@ internal class EntryAdmin
         userData.UserToReply = 0;
         _repo.UpsertUser(userData);
 
-        await NotifyAdmin(targetUser, messageText);
+        var inlineKeyboard = new InlineKeyboardMarkup(new[]
+        {
+            InlineKeyboardButton.WithCallbackData("Ответить", BotResponce.Create("message_to_admins")),
+        });
+
+        await SendMessageToUser(targetUser, messageText, inlineKeyboard);
         
         var adminList = _repo.GetAdminUsers();
         
         foreach (var admin in adminList)
         {
-            await NotifyAdmin(admin.ChatId,
+            await SendMessageToUser(admin.ChatId,
                 $"Администратор @{userData.Username} ({userData.UserId}) отправил сообщение пользователю ({targetUser}): {messageText}");
         }
 
