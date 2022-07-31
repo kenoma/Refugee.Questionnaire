@@ -104,7 +104,7 @@ namespace RQ.Bot.BotInfrastructure
                 return;
             }
             
-            if (await _entryAdmin.IsUserReply(message.Chat.Id, user.Id, message.Text!))
+            if (await _entryAdmin.IsUserReplied(user.Id, message.Text!))
             {
                 return;
             }

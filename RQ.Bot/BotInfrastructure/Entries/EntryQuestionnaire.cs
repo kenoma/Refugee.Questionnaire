@@ -160,7 +160,7 @@ public class EntryQuestionnaire
 
         var isZeroGroup = _questionnaire
             .Entries
-            .Where(z => unanswered.Contains(z.Text))
+            .Where(z => unanswered?.Contains(z.Text) ?? false)
             .Any(z => z.Group == 0);
 
         if (!isZeroGroup && await PollStage(refRequest, chatId))
@@ -168,28 +168,54 @@ public class EntryQuestionnaire
 
         _logger.LogInformation("IterateRequestAsync {ChatId} proceed to {Unanswered}", chatId, unanswered);
 
-        if (unanswered == null)
-        {
-            _repo.UpdateRefRequest(refRequest);
+        var correspondingQuest = _questionnaire.Entries.First(z => z.Text == unanswered);
 
-            var previewBody = $"Раздел {refRequest.CurrentCategory} заполнен";
-
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Html,
-                text: previewBody,
-                disableWebPagePreview: false
-            );
-            await ReturnToRootAsync(chatId, refRequest.UserId);
-        }
-        else
+        if (correspondingQuest.IsAutoPass)
         {
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 parseMode: ParseMode.Markdown,
-                text: unanswered,
+                text: correspondingQuest.Text,
                 disableWebPagePreview: false
             );
+
+            refRequest.Answers = refRequest.Answers.Concat(new[]
+            {
+                new RefRequestEntry
+                {
+                    Question = correspondingQuest.Text,
+                    Answer = "✓"
+                }
+            }).ToArray();
+            _repo.UpdateRefRequest(refRequest);
+
+            await IterateRequestAsync(chatId, refRequest);
+        }
+        else
+        {
+            if (unanswered == null)
+            {
+                _repo.UpdateRefRequest(refRequest);
+
+                var previewBody = $"Раздел {refRequest.CurrentCategory} заполнен";
+
+                await _botClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    parseMode: ParseMode.Html,
+                    text: previewBody,
+                    disableWebPagePreview: false
+                );
+                await ReturnToRootAsync(chatId, refRequest.UserId);
+            }
+            else
+            {
+                await _botClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    parseMode: ParseMode.Markdown,
+                    text: unanswered,
+                    disableWebPagePreview: false
+                );
+            }
         }
     }
 
@@ -216,7 +242,7 @@ public class EntryQuestionnaire
 
         _logger.LogInformation("TryProcessStateMachineAsync {UserId} {Unanswered}", userId, unanswered);
 
-        var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
+        var correspondingEntry = _questionnaire.Entries.First(z => z.Text == unanswered);
 
         if ((string.IsNullOrEmpty(unanswered) ||
              !string.IsNullOrWhiteSpace(correspondingEntry?.Category))
@@ -260,7 +286,6 @@ public class EntryQuestionnaire
         return true;
     }
 
-    
 
     private async Task<bool> DrawCategories(ChatId chatId, RefRequest refRequest)
     {
@@ -484,7 +509,8 @@ public class EntryQuestionnaire
 
         await _botClient.SendPollAsync(
             chatId: chatId,
-            question: "Ответьте, пожалуйста, на следующие вопросы (если да -  поставьте галочку в соответствующих пунктах, а затем нажмите на кнопку \"Голосовать\" / \"Vote\"):",
+            question:
+            "Ответьте, пожалуйста, на следующие вопросы (если да -  поставьте галочку в соответствующих пунктах, а затем нажмите на кнопку \"Голосовать\" / \"Vote\"):",
             pollQuestions,
             allowsMultipleAnswers: true,
             isAnonymous: false
@@ -496,13 +522,14 @@ public class EntryQuestionnaire
     public async Task ProcessPoll(PollAnswer updatePollAnswer)
     {
         var user = updatePollAnswer.User;
-        
+
         if (!_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
             return;
-        
+
         var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch != 0).ToArray();
 
-        var activeSwitches = switches.Select(z => z.Text).Except(refRequest.Answers.Select(z => z.Question)).Take(9).ToArray();
+        var activeSwitches = switches.Select(z => z.Text).Except(refRequest.Answers.Select(z => z.Question)).Take(9)
+            .ToArray();
 
         for (var switchIndex = 0; switchIndex < activeSwitches.Length; switchIndex++)
         {
@@ -537,7 +564,7 @@ public class EntryQuestionnaire
         }
 
         _repo.UpdateRefRequest(refRequest);
-        
+
         await IterateRequestAsync(refRequest.ChatId, refRequest);
     }
 }
