@@ -98,3 +98,10 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/ref-9531-oskol.csv"
     enabled: yes
     container_name: "school_StariyOskol_bot"
+  - port: 9278
+    working_directory: "/opt/questionnaire-bot/instances/9278"
+    telegram_token: "{{ vault_questionnaire_bot_9278_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9278_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9278.csv"
+    enabled: yes
+    container_name: "school_spb_bot"
