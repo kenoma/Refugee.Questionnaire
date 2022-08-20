@@ -152,7 +152,7 @@ public class EntryQuestionnaire
         }
 
         var unanswered = _questionnaire
-            .Entries
+             .Entries
             .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
             .Select(z => z.Text)
             .Except(refRequest.Answers.Select(z => z.Question))
