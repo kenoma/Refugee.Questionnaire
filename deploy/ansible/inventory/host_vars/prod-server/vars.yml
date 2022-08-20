@@ -105,3 +105,10 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/ref-9278.csv"
     enabled: yes
     container_name: "school_spb_bot"
+  - port: 9378
+    working_directory: "/opt/questionnaire-bot/instances/9378"
+    telegram_token: "{{ vault_questionnaire_bot_9378_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9378_telegram_admin_id }}"
+    quest_container_path: "/app/questions/school-revisited.csv"
+    enabled: yes
+    container_name: "small_school_spb_bot"
