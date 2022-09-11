@@ -1,4 +1,6 @@
-﻿using Prometheus;
+﻿using System.Collections.Specialized;
+using System.Text;
+using Prometheus;
 using RQ.Bot.BotInfrastructure.Entry;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -149,8 +151,17 @@ namespace RQ.Bot.BotInfrastructure
                 return;
 
             var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
-            var usage = $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n";
+            var requests = _entryQuestionnaire.GetAllUserRequest(msg.From!);
 
+            var usage = new StringBuilder(
+                    $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n")
+                .AppendLine($"Вы заполнили {requests.Length} заявок\r\n")
+                .AppendLine($"Последние 10:\r\n")
+                .AppendJoin("\r\n",
+                    requests.Take(10).Select(z =>
+                        $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
+                .ToString();
+            
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("fill_request")),

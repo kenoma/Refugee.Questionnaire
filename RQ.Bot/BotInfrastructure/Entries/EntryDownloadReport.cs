@@ -75,7 +75,7 @@ public class EntryDownloadCsv
             foreach (var answ in refRequest.Answers)
                 if (!record.TryAdd(answ.Question, answ.Answer))
                 {
-                    record[answ.Question] += answ.Answer;
+                    record[answ.Question] = $"{record[answ.Question]} answ.Answer";
                 }
 
             records.Add(record);
@@ -127,29 +127,7 @@ public class EntryDownloadCsv
 
     private async Task<Stream> RenderXlsxAsync(IEnumerable<RefRequest> dataToRenderXlsx)
     {
-        var records = new List<Dictionary<string, string>>();
-        var users = _repo.GetAllUsers()
-            .ToDictionary(z => z.UserId, z => z);
-
-        foreach (var refRequest in dataToRenderXlsx)
-        {
-            var record = new Dictionary<string, string>();
-            record.TryAdd("Дата заполнения",
-                refRequest.TimeStamp.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture));
-
-            if (users.TryGetValue(refRequest.UserId, out var user))
-            {
-                record.TryAdd("Telegram", $"@{user.Username}");
-            }
-
-            foreach (var answ in refRequest.Answers)
-                if (!record.TryAdd(answ.Question, answ.Answer))
-                {
-                    record[answ.Question] += answ.Answer;
-                }
-
-            records.Add(record);
-        }
+        var records = ExtractDictionaryToRender(dataToRenderXlsx);
 
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -221,6 +199,42 @@ public class EntryDownloadCsv
         await package.SaveAsync();
         ms.Position = 0;
         return ms;
+    }
+
+    private List<Dictionary<string, string>> ExtractDictionaryToRender(IEnumerable<RefRequest> dataToRenderXlsx)
+    {
+        var records = new List<Dictionary<string, string>>();
+        var users = _repo.GetAllUsers()
+            .ToDictionary(z => z.UserId, z => z);
+
+        foreach (var refRequest in dataToRenderXlsx)
+        {
+            var record = new Dictionary<string, string>();
+            var startedTs = refRequest.Answers.Select(z => z.Timestamp).DefaultIfEmpty(refRequest.TimeStamp).Min();
+            startedTs = startedTs > refRequest.TimeStamp ? refRequest.TimeStamp : startedTs;
+            record.TryAdd("Дата заполнения",
+                refRequest.TimeStamp.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture));
+            record.TryAdd("Дата начала заполнения",
+                startedTs.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture));
+
+            record.TryAdd("Продолжтельность заполнения",
+                (refRequest.TimeStamp - startedTs).ToString());
+
+            if (users.TryGetValue(refRequest.UserId, out var user))
+            {
+                record.TryAdd("Telegram", $"@{user.Username}");
+            }
+
+            foreach (var answ in refRequest.Answers)
+                if (!record.TryAdd(answ.Question, answ.Answer))
+                {
+                    record[answ.Question] = $"{record[answ.Question]} {answ.Answer}" ;
+                }
+
+            records.Add(record);
+        }
+
+        return records;
     }
 
     private void CheckDuplicates(string[] headings, int row, ExcelWorksheet sheet)

@@ -25,6 +25,7 @@ public class RefRequest
     public RefRequestEntry[] Answers { get; set; } = Array.Empty<RefRequestEntry>();
     public bool IsCompleted { get; set; }
     public string CurrentCategory { get; set; }
+    public bool IsInterrupted { get; set; }
 
     public override string ToString() =>
         $"{TimeStamp}: {(IsCompleted ? "заполнен" : "в процессе")} {Answers.FirstOrDefault()?.Answer} ";
