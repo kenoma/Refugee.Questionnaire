@@ -381,8 +381,8 @@ public class EntryQuestionnaire
         }
 
         refRequest.IsCompleted = true;
+        refRequest.IsInterrupted = true;
         _repo.UpdateRefRequest(refRequest);
-        _repo.RemoveRequest(refRequest.Id);
 
         await _botClient.SendTextMessageAsync(
             chatId: chatId,
@@ -566,5 +566,12 @@ public class EntryQuestionnaire
         _repo.UpdateRefRequest(refRequest);
 
         await IterateRequestAsync(refRequest.ChatId, refRequest);
+    }
+
+    public RefRequest[] GetAllUserRequest(User msgFrom)
+    {
+        return _repo.GetAllRequestFromUser(msgFrom.Id)
+            .OrderByDescending(z=>z.TimeStamp)
+            .ToArray();
     }
 }
