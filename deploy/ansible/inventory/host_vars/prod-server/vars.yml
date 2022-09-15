@@ -3,6 +3,13 @@
 ansible_host: "{{ vault_ansible_host }}"
 
 questionnaire_bot_instances:
+  - port: 9023
+    working_directory: "/opt/questionnaire-bot/instances/9023"
+    telegram_token: "{{ vault_questionnaire_bot_9023_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9023_telegram_admin_id }}"
+    quest_container_path: "/app/questions/ref-9023.csv"
+    enabled: yes
+    container_name: "help_refugees_Krasnodar_bot"
   - port: 9025
     working_directory: "/opt/questionnaire-bot/instances/9025"
     telegram_token: "{{ vault_questionnaire_bot_9025_telegram_token }}"
