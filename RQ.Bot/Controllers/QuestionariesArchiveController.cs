@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Bot.Repo;
 using Microsoft.AspNetCore.Mvc;
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 
 namespace RQ.Bot.Controllers
 {
@@ -12,12 +14,15 @@ namespace RQ.Bot.Controllers
     {
         private readonly IRepository _repo;
         private readonly ILogger<QuestionariesArchiveController> _logger;
+        private readonly TelegramBotClient _botClient;
 
         /// <inheritdoc />
-        public QuestionariesArchiveController(IRepository repo, ILogger<QuestionariesArchiveController> logger)
+        public QuestionariesArchiveController(IRepository repo, ILogger<QuestionariesArchiveController> logger,
+            TelegramBotClient botClient)
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _botClient = botClient ?? throw new ArgumentNullException(nameof(botClient));
         }
 
         /// <summary>
@@ -56,7 +61,7 @@ namespace RQ.Bot.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetUsers([FromHeader(Name = "X-Volunteer-Token")] string token)
         {
-            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecords), token);
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetUsers), token);
 
             if (!_repo.IsKnownToken(token))
             {
@@ -64,7 +69,7 @@ namespace RQ.Bot.Controllers
             }
 
             var records = _repo.GetAllUsers()
-                .OrderBy(z=>z.Created);
+                .OrderBy(z => z.Created);
 
             return Ok(records);
         }
@@ -80,9 +85,10 @@ namespace RQ.Bot.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetRecordsDate([FromHeader(Name = "X-Volunteer-Token")] string token,
-            [Required(ErrorMessage = "Установите дату")] DateTime? dt)
+            [Required(ErrorMessage = "Установите дату")]
+            DateTime? dt)
         {
-            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecords), token);
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecordsDate), token);
 
             if (!_repo.IsKnownToken(token))
             {
@@ -108,9 +114,10 @@ namespace RQ.Bot.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetRecordsDateArch([FromHeader(Name = "X-Volunteer-Token")] string token,
-            [Required(ErrorMessage = "Установите дату")] DateTime? dt)
+            [Required(ErrorMessage = "Установите дату")]
+            DateTime? dt)
         {
-            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecords), token);
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecordsDateArch), token);
 
             if (!_repo.IsKnownToken(token))
             {
@@ -136,9 +143,10 @@ namespace RQ.Bot.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetUsersDate([FromHeader(Name = "X-Volunteer-Token")] string token,
-            [Required(ErrorMessage = "Установите дату")] DateTime? dt)
+            [Required(ErrorMessage = "Установите дату")]
+            DateTime? dt)
         {
-            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetRecords), token);
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(GetUsersDate), token);
 
             if (!_repo.IsKnownToken(token))
             {
@@ -151,6 +159,50 @@ namespace RQ.Bot.Controllers
             var records = _repo.GetUsersDt(dt.Value);
 
             return Ok(records);
+        }
+
+        /// <summary>
+        ///     Отправляет сообщение пользователю
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Сообщение отправлено</response>
+        /// <response code="401">Не передан токен для доступа</response>
+        /// <response code="400">Произошла ошибка</response>
+        [HttpPost("sendmtu")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SendMessageToUser([FromHeader(Name = "X-Volunteer-Token")] string token,
+            [Required(ErrorMessage = "Укажите пользоватея")]
+            long userId,
+            [Required(ErrorMessage = "Укажите текст сообщения"), FromBody]
+            string message)
+        {
+            _logger.LogTrace("Someone requested {Method} with {Token}", nameof(SendMessageToUser), token);
+
+            if (!_repo.IsKnownToken(token))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                var chat = await _botClient.GetChatAsync(userId);
+                
+                await _botClient.SendTextMessageAsync(
+                    chatId: chat.Id,
+                    parseMode: ParseMode.Html,
+                    text: message,
+                    disableWebPagePreview: false
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning("Failed to send message to {UserId} : {Reason}", userId, e.Message);
+                return BadRequest();
+            }
+
+            return Ok();
         }
     }
 }
