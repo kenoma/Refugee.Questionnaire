@@ -19,3 +19,11 @@ public class CustomByteConverter : DefaultTypeConverter
         return byte.TryParse(text, out var result) ? result : (byte)0;
     }
 }
+
+public class CustomEnumConverter<T> : DefaultTypeConverter where T : struct, Enum
+{
+    public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+    {
+        return Enum.TryParse<T>(text, out var parsedEnum) ? parsedEnum : default(T);
+    }
+}

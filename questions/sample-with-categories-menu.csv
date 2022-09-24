@@ -1,4 +1,4 @@
-Text,Group,IsGroupSwitch,DuplicateCheck,Category,ValidationRegex,IsAutoPass
+Text,Group,IsGroupSwitch,DuplicateCheck,Category,ValidationRegex,AutopassMode
 "Информационное сообщение",0,0,0,,,1
 "Обязательный вопрос 1",0,0,0,,
 "Обязательный вопрос 2",0,0,0,,

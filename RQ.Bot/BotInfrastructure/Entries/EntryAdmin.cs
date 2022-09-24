@@ -72,6 +72,12 @@ internal class EntryAdmin
                 {
                     InlineKeyboardButton.WithCallbackData("Список администраторов",
                         BotResponce.Create("list_admins"))
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(
+                        $"Уведомления о новых анкетах:{(rfUser.IsNotificationsOn ? "ВКЛ" : "ВЫКЛ")}",
+                        BotResponce.Create("switch_notifications", !rfUser.IsNotificationsOn))
                 }
             });
 
@@ -239,7 +245,7 @@ internal class EntryAdmin
         if (_repo.TryGetUserById(user.Id, out var userData))
         {
             userData.IsMessageToAdminsRequest = true;
-                        
+
             _repo.UpsertUser(userData);
             await SendMessageToUser(chatId, "Напишите сообщение, которое будет передано администраторам:");
             _logger.LogInformation("User {UserId} asks for help", user.Id);
@@ -270,7 +276,7 @@ internal class EntryAdmin
     {
         if (!_repo.TryGetUserById(userId, out var userData))
             return false;
-        
+
         if (!userData.IsMessageToAdminsRequest)
             return false;
 
@@ -283,7 +289,7 @@ internal class EntryAdmin
             BotResponce.Create("reply_to_user", userData.UserId));
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
-        
+
         foreach (var admin in adminList)
         {
             await SendMessageToUser(admin.ChatId,
@@ -295,7 +301,7 @@ internal class EntryAdmin
         _logger.LogInformation("User {UserId} send message: {MessageText}", userId, messageText);
         return true;
     }
-    
+
     public async Task<bool> IsUserReplied(long userId, string messageText)
     {
         if (!_repo.TryGetUserById(userId, out var userData))
@@ -304,7 +310,7 @@ internal class EntryAdmin
         if (userData.UserToReply == 0)
             return false;
 
-        var targetUser = userData.UserToReply; 
+        var targetUser = userData.UserToReply;
         userData.UserToReply = 0;
         _repo.UpsertUser(userData);
 
@@ -314,9 +320,9 @@ internal class EntryAdmin
         });
 
         await SendMessageToUser(targetUser, messageText, inlineKeyboard);
-        
+
         var adminList = _repo.GetAdminUsers();
-        
+
         foreach (var admin in adminList)
         {
             await SendMessageToUser(admin.ChatId,
@@ -325,5 +331,24 @@ internal class EntryAdmin
 
         _logger.LogInformation("User {UserId} send message: {MessageText}", userId, messageText);
         return true;
+    }
+
+    public async Task SwitchNotificationsToUserAsync(Chat messageChat, User user, bool isNotificationsOn)
+    {
+        if (_repo.TryGetUserById(user.Id, out var userData))
+        {
+            userData.IsNotificationsOn = isNotificationsOn;
+
+            _repo.UpsertUser(userData);
+            await SendMessageToUser(messageChat.Id,
+                isNotificationsOn
+                    ? "Вы теперь будете получать уведомления о новых анкетах"
+                    : "Вы отключили уведомления");
+            _logger.LogInformation("User {UserId} switches notifications to {IsNotAll}", user.Id, isNotificationsOn);
+        }
+        else
+        {
+            _logger.LogInformation("Failed to get user {UserId} data", user.Id);
+        }
     }
 }

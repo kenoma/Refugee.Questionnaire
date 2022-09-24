@@ -3,6 +3,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using RQ.Bot.Extensions.CsvUtils;
 using RQ.DTO;
+using RQ.DTO.Enum;
 
 namespace RQ.Bot.Extensions;
 
@@ -40,10 +41,14 @@ public static class QuestionnaireExtension
                 rec.Text = rec.Text.Trim();
             }
 
-            return new Questionnaire
+            var questionnaire = new Questionnaire
             {
                 Entries = records
+                    .Where(z => z.AutopassMode is AutopassMode.None or AutopassMode.Simple).ToArray(),
+                Headliners = records.Where(z => z.AutopassMode == AutopassMode.Headline).ToArray(),
+                Finishers = records.Where(z => z.AutopassMode == AutopassMode.Finisher).ToArray(),
             };
+            return questionnaire;
         });
 
         return builder;
