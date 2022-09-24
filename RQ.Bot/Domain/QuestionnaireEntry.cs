@@ -1,3 +1,5 @@
+using RQ.DTO.Enum;
+
 namespace RQ.DTO;
 
 public class QuestionnaireEntry
@@ -16,7 +18,7 @@ public class QuestionnaireEntry
     ///     Проверка на дубль похожих ответов при генерации ответов
     /// </summary>
     public byte DuplicateCheck { get; set; } = 0;
-    
+
     /// <summary>
     ///     Категория вопроса (для генерации меню с кнопками)
     /// </summary>
@@ -33,7 +35,19 @@ public class QuestionnaireEntry
     public byte IsGroupSwitch { get; set; } = 0;
 
     /// <summary>
-    ///     Является ли вопрос информационным, после которого мы переходим к следующему?
+    ///     Сообщения, которые выводятся автоматически, без подтверждения пользователем
+    ///     0 - не является пропускаемым сообщением
+    ///     1 - обычное сообщение, которое проскакивает в тексте
+    ///     2 - Сообщения, которые всегда идут в начале анкеты
+    ///     3 - Сообщения, которые всегда идут в конце
     /// </summary>
-    public bool IsAutoPass { get; set; }
+    public AutopassMode AutopassMode { get; set; }
+
+    /// <summary>
+    ///     Адрес картинки или видео для вложения к сообщению
+    ///     Картинки только png или jpg
+    ///     Видео только из файла 
+    /// </summary>
+    /// <returns></returns>
+    public string Attachment { get; set; }
 }

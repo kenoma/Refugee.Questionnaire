@@ -160,6 +160,7 @@ namespace RQ.Bot.BotInfrastructure
                 .AppendJoin("\r\n",
                     requests.Take(10).Select(z =>
                         $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
+                .AppendLine("\r\n`------------------------------------------`\r\n")
                 .ToString();
             
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
@@ -231,7 +232,6 @@ namespace RQ.Bot.BotInfrastructure
                     
                     case "q_finish":
                         await _entryQuestionnaire.CompleteAsync(callbackQuery.Message?.Chat!, user.Id);
-                        await Usage(callbackQuery.Message);
                         break;
                     
                     case "q_return":
@@ -260,6 +260,10 @@ namespace RQ.Bot.BotInfrastructure
                     case "reply_to_user":
                         await _entryAdmin.WaitForMessageToUsersAsync(callbackQuery.Message?.Chat!, user,
                             long.Parse(responce.P));
+                        break;
+                    case "switch_notifications":
+                        await _entryAdmin.SwitchNotificationsToUserAsync(callbackQuery.Message?.Chat!, user,
+                            bool.Parse(responce.P));
                         break;
                         
                 }

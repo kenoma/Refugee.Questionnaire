@@ -36,4 +36,6 @@ public class UserData
     public bool IsMessageToAdminsRequest { get; set; }
     
     public long UserToReply { get; set; }
+    
+    public bool IsNotificationsOn { get; set; }
 }

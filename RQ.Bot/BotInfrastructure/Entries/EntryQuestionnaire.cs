@@ -1,10 +1,13 @@
 ﻿using System.Text.RegularExpressions;
 using Bot.Repo;
 using RQ.DTO;
+using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
+using File = System.IO.File;
 
 namespace RQ.Bot.BotInfrastructure.Entry;
 
@@ -120,8 +123,7 @@ public class EntryQuestionnaire
             await _botClient.SendTextMessageAsync(
                 chatId: user.Id,
                 parseMode: ParseMode.Html,
-                text: "Необходимо завершить заполнение активного запроса, прежде чем продолжить",
-                disableWebPagePreview: false
+                text: "Необходимо завершить заполнение активного запроса, прежде чем продолжить"
             );
 
             await IterateRequestAsync(user.Id, refRequest);
@@ -138,6 +140,11 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(request);
 
+        foreach (var headliner in _questionnaire.Headliners)
+        {
+            await SendQuestMessageToUser(user.Id, headliner);
+        }
+
         await IterateRequestAsync(user.Id, request);
     }
 
@@ -152,7 +159,7 @@ public class EntryQuestionnaire
         }
 
         var unanswered = _questionnaire
-             .Entries
+            .Entries
             .Where(z => string.IsNullOrWhiteSpace(z.Category) || z.Category.Equals(refRequest.CurrentCategory))
             .Select(z => z.Text)
             .Except(refRequest.Answers.Select(z => z.Question))
@@ -168,16 +175,11 @@ public class EntryQuestionnaire
 
         _logger.LogInformation("IterateRequestAsync {ChatId} proceed to {Unanswered}", chatId, unanswered);
 
-        var correspondingQuest = _questionnaire.Entries.First(z => z.Text == unanswered);
+        var correspondingQuest = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
 
-        if (correspondingQuest.IsAutoPass)
+        if (correspondingQuest?.AutopassMode == AutopassMode.Simple)
         {
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Markdown,
-                text: correspondingQuest.Text,
-                disableWebPagePreview: false
-            );
+            await SendQuestMessageToUser(chatId, correspondingQuest);
 
             refRequest.Answers = refRequest.Answers.Concat(new[]
             {
@@ -209,12 +211,49 @@ public class EntryQuestionnaire
             }
             else
             {
-                await _botClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    parseMode: ParseMode.Markdown,
-                    text: unanswered,
-                    disableWebPagePreview: false
-                );
+                await SendQuestMessageToUser(chatId, correspondingQuest);
+            }
+        }
+    }
+
+    private async Task SendQuestMessageToUser(ChatId chatId, QuestionnaireEntry questEntry)
+    {
+        if (string.IsNullOrEmpty(questEntry.Attachment))
+        {
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                parseMode: ParseMode.Markdown,
+                text: questEntry.Text,
+                disableWebPagePreview: false
+            );
+        }
+        else
+        {
+            if (!File.Exists(questEntry.Attachment))
+            {
+                await _botClient.SendPhotoAsync(
+                    chatId,
+                    new InputOnlineFile(questEntry.Attachment),
+                    caption: questEntry.Text);
+            }
+            else
+            {
+                var imageExtensions = new HashSet<string> { ".JPG", ".JPEG", ".JPE", ".BMP", ".GIF", ".PNG" };
+
+                if (imageExtensions.Contains(Path.GetExtension(questEntry.Attachment!)?.ToUpperInvariant()))
+                {
+                    await _botClient.SendPhotoAsync(
+                        chatId,
+                        new InputOnlineFile(File.OpenRead(questEntry.Attachment!)),
+                        caption: questEntry.Text);
+                }
+                else
+                {
+                    await _botClient.SendVideoAsync(
+                        chatId,
+                        new InputOnlineFile(File.OpenRead(questEntry.Attachment!)),
+                        caption: questEntry.Text);
+                }
             }
         }
     }
@@ -242,7 +281,7 @@ public class EntryQuestionnaire
 
         _logger.LogInformation("TryProcessStateMachineAsync {UserId} {Unanswered}", userId, unanswered);
 
-        var correspondingEntry = _questionnaire.Entries.First(z => z.Text == unanswered);
+        var correspondingEntry = _questionnaire.Entries.FirstOrDefault(z => z.Text == unanswered);
 
         if ((string.IsNullOrEmpty(unanswered) ||
              !string.IsNullOrWhiteSpace(correspondingEntry?.Category))
@@ -335,14 +374,14 @@ public class EntryQuestionnaire
             {
                 return new[]
                 {
-                    InlineKeyboardButton.WithCallbackData($"Удалить записи: {z}", BotResponce.Create("q_rem", z))
+                    InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}", BotResponce.Create("q_rem", z))
                 };
             }));
 
             buttons.Add(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create("q_finish")),
-                InlineKeyboardButton.WithCallbackData("Начало", BotResponce.Create("q_return")),
+                InlineKeyboardButton.WithCallbackData("Обратно", BotResponce.Create("q_return")),
             });
 
             try
@@ -405,13 +444,31 @@ public class EntryQuestionnaire
 
         if (refRequest.Answers.Any())
         {
+            var questReview =
+                $"Анкета:\r\n{string.Join("\r\n", refRequest.Answers.Select(z => $"`{z.Question.PadRight(20).Substring(0, 20)}|\t`{z.Answer}"))}";
+
             await _botClient.SendTextMessageAsync(
                 chatId: messageChat,
                 parseMode: ParseMode.Markdown,
                 text:
-                $"Завершенная анкета\r\n{string.Join("\r\n", refRequest.Answers.Select(z => $"`{z.Question.PadRight(20).Substring(0, 20)}|\t`{z.Answer}"))}",
+                questReview,
                 disableWebPagePreview: false
             );
+
+            foreach (var finisher in _questionnaire.Finishers)
+            {
+                await SendQuestMessageToUser(messageChat, finisher);
+            }
+
+            foreach (var admin in _repo.GetAdminUsers().Where(z => z.IsNotificationsOn))
+            {
+                await _botClient.SendTextMessageAsync(
+                    chatId: admin.ChatId,
+                    parseMode: ParseMode.Markdown,
+                    text: $"*Новая анкета*\r\n{questReview}",
+                    disableWebPagePreview: false
+                );
+            }
         }
 
         _logger.LogInformation("Ref request {RefId} completed by {UserId}", refRequest.Id, userId);
@@ -571,7 +628,7 @@ public class EntryQuestionnaire
     public RefRequest[] GetAllUserRequest(User msgFrom)
     {
         return _repo.GetAllRequestFromUser(msgFrom.Id)
-            .OrderByDescending(z=>z.TimeStamp)
+            .OrderByDescending(z => z.TimeStamp)
             .ToArray();
     }
 }
