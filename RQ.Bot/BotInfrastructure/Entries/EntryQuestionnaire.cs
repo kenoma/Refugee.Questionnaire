@@ -234,6 +234,7 @@ public class EntryQuestionnaire
         {
             if (!File.Exists(questEntry.Attachment))
             {
+                await _botClient.SendChatActionAsync(chatId, ChatAction.UploadPhoto);
                 await _botClient.SendPhotoAsync(
                     chatId,
                     new InputOnlineFile(questEntry.Attachment),
@@ -252,6 +253,7 @@ public class EntryQuestionnaire
                 }
                 else
                 {
+                    await _botClient.SendChatActionAsync(chatId, ChatAction.UploadVoice);
                     await _botClient.SendVideoAsync(
                         chatId,
                         new InputOnlineFile(File.OpenRead(questEntry.Attachment!)),
