@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Bot.Repo;
+using RQ.Bot.Integrations;
 using RQ.DTO;
 using RQ.DTO.Enum;
 using Telegram.Bot;
@@ -17,16 +18,18 @@ public class EntryQuestionnaire
     private readonly IRepository _repo;
     private readonly Questionnaire _questionnaire;
     private readonly ILogger<EntryQuestionnaire> _logger;
+    private readonly IEnumerable<IBotIntegration> _integrations;
     private const int ButtonsPerMessage = 30;
-    public const string CategoriesSeparator = "->";
+    private const string CategoriesSeparator = "->";
 
     public EntryQuestionnaire(TelegramBotClient botClient, IRepository repo, Questionnaire questionnaire,
-        ILogger<EntryQuestionnaire> logger)
+        ILogger<EntryQuestionnaire> logger, IEnumerable<IBotIntegration> integrations)
     {
         _botClient = botClient ?? throw new ArgumentNullException(nameof(botClient));
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _questionnaire = questionnaire ?? throw new ArgumentNullException(nameof(questionnaire));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _integrations = integrations ?? throw new ArgumentNullException(nameof(integrations));
     }
 
     public async Task GetUserRefRequestAsync(Chat chatId, User user)
@@ -470,6 +473,8 @@ public class EntryQuestionnaire
                 );
             }
         }
+
+        await Task.WhenAll(_integrations.Select(z => z.PushRequestToIntegrationAsync(refRequest)));
 
         _logger.LogInformation("Ref request {RefId} completed by {UserId}", refRequest.Id, userId);
     }

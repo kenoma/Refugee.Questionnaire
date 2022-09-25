@@ -132,7 +132,7 @@ public class EntryDownloadCsv
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
         var ms = new MemoryStream();
-        var package = new ExcelPackage(ms);
+        using var package = new ExcelPackage(ms);
         var sheet = package.Workbook.Worksheets.Add("Заявки");
 
         var headings = records.SelectMany(z => z.Keys).Distinct().ToArray();

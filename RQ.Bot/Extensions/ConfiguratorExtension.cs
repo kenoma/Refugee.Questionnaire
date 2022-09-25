@@ -25,6 +25,7 @@ public static class ConfiguratorExtension
             options.TimestampFormat = "dd:MM:yyyy hh:mm:ss ";
         });
         
+        builder.Services.AddHttpClient();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>

@@ -42,7 +42,7 @@ internal class EntryAdmin
                 });
                 await SendMessageToUser(admin.ChatId,
                     $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
-                    inlineKeyboard);
+                    admin.IsSuperAdmin ? inlineKeyboard : null);
             }
         }
         else
@@ -108,6 +108,7 @@ internal class EntryAdmin
             else
             {
                 userData.IsAdmin = true;
+                userData.PromotedByUser = -1;
                 _repo.UpsertUser(userData);
             }
 
