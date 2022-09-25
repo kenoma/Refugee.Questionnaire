@@ -38,4 +38,5 @@ public class UserData
     public long UserToReply { get; set; }
     
     public bool IsNotificationsOn { get; set; }
+    public bool IsSuperAdmin => PromotedByUser == -1;
 }
