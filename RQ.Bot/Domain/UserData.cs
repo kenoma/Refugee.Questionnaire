@@ -1,4 +1,5 @@
 ﻿// ReSharper disable UnusedAutoPropertyAccessor.Global
+
 using LiteDB;
 
 namespace RQ.DTO;
@@ -21,12 +22,13 @@ public class UserData
     /// </summary>
     public string Token { get; set; } = Guid.NewGuid().ToString();
 
-    public bool IsAdmin { get; set; }
+    public bool IsAdministrator { get; set; }
+    
     public string Username { get; set; } = string.Empty;
+    
     public string FirstName { get; set; } = string.Empty;
+    
     public string LastName { get; set; } = string.Empty;
-
-    public long PromotedByUser { get; set; }
 
     /// <summary>
     ///     Дата\время создания пользователя
@@ -34,9 +36,8 @@ public class UserData
     public DateTime Created { get; set; } = DateTime.MinValue;
 
     public bool IsMessageToAdminsRequest { get; set; }
-    
+
     public long UserToReply { get; set; }
-    
+
     public bool IsNotificationsOn { get; set; }
-    public bool IsSuperAdmin => PromotedByUser == -1;
 }

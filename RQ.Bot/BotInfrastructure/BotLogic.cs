@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Text;
 using Prometheus;
+using RQ.Bot.BotInfrastructure.Entries;
 using RQ.Bot.BotInfrastructure.Entry;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -191,39 +192,25 @@ namespace RQ.Bot.BotInfrastructure
 
                 switch (responce.E)
                 {
-                    case "all_user_queries":
-                        await _entryQuestionnaire.GetUserRefRequestAsync(callbackQuery.Message?.Chat!, user);
-
-                        break;
-                        
                     case "fill_request":
                         await _entryQuestionnaire.FillLatestRequestAsync(callbackQuery.Message?.Chat, user);
 
                         break;
-                        
-                    case "auq":
-                        await _entryQuestionnaire.ShowArchiveRequestAsync(callbackQuery.Message?.Chat!, user,
-                            Guid.Parse(responce.P));
-                        break;
-                    
-                    case "add_permitions":
-                        await _entryAdmin.PromoteUserAsync(user.Id, long.Parse(responce.P));
-                        break;
                     
                     case "get_current_csv":
-                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, false);
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, false, user);
                         break;
                     
                     case "get_all_csv":
-                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, true);
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, true, user);
                         break;
                     
                     case "get_current_xlsx":
-                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, false);
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, false, user);
                         break;
                     
                     case "get_all_xlsx":
-                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, true);
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, true, user);
                         break;
                         
                     case "archive":
@@ -246,13 +233,6 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryQuestionnaire.RemoveAnswersForCategoryAsync(callbackQuery.Message?.Chat!, user, responce.P);
                         break;
                     
-                    case "list_admins":
-                        await _entryAdmin.ListAdminsApprovedByUsersAsync(callbackQuery.Message?.Chat!, user);
-                        break;
-                        
-                    case "remove_user":
-                        await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
-                        break;
                     case "message_to_admins":
                         await _entryAdmin.WaitForMessageToAdminsAsync(callbackQuery.Message?.Chat!, user);
                         break;
@@ -261,6 +241,7 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryAdmin.WaitForMessageToUsersAsync(callbackQuery.Message?.Chat!, user,
                             long.Parse(responce.P));
                         break;
+                    
                     case "switch_notifications":
                         await _entryAdmin.SwitchNotificationsToUserAsync(callbackQuery.Message?.Chat!, user,
                             bool.Parse(responce.P));

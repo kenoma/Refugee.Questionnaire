@@ -30,8 +30,13 @@ public class EntryDownloadCsv
             reportGenerationParams ?? throw new ArgumentNullException(nameof(reportGenerationParams));
     }
 
-    public async Task GetRequestsInCsvAsync(ChatId chatId, bool allRequests)
+    public async Task GetRequestsInCsvAsync(ChatId chatId, bool allRequests, User user)
     {
+        if (_repo.TryGetUserById(user.Id, out var userData) && !userData.IsAdministrator)
+        {
+            return;
+        }
+        
         var dataToRenderCsv = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
         var sb = RenderCsv(_reportGenerationParams.IsDescendingSorting? 
@@ -106,8 +111,13 @@ public class EntryDownloadCsv
         return writer.GetStringBuilder();
     }
 
-    public async Task GetRequestsInXlsxAsync(ChatId chatId, bool allRequests)
+    public async Task GetRequestsInXlsxAsync(ChatId chatId, bool allRequests, User user)
     {
+        if (_repo.TryGetUserById(user.Id, out var userData) && !userData.IsAdministrator)
+        {
+            return;
+        }
+        
         var dataToRenderXlsx = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
         var ms = await RenderXlsxAsync(_reportGenerationParams.IsDescendingSorting
