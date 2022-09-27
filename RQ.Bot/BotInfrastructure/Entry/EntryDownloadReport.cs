@@ -37,6 +37,8 @@ public class EntryDownloadCsv
             return;
         }
         
+        await _botClient.SendChatActionAsync(chatId, ChatAction.UploadDocument);
+        
         var dataToRenderCsv = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
         var sb = RenderCsv(_reportGenerationParams.IsDescendingSorting? 
@@ -117,6 +119,8 @@ public class EntryDownloadCsv
         {
             return;
         }
+
+        await _botClient.SendChatActionAsync(chatId, ChatAction.UploadDocument);
         
         var dataToRenderXlsx = allRequests ? _repo.GetAllRequests() : _repo.GetCurrentRequests();
 
