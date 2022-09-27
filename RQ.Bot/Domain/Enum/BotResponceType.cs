@@ -8,7 +8,6 @@ public enum BotResponceType
     CurrentCsv,
     AllCsv,
     Archive,
-    ListAdmins,
     SwitchNotifications,
     ReplyToUser,
     MessageToAdmins,

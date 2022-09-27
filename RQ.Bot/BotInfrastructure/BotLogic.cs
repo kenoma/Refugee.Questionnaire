@@ -185,68 +185,82 @@ namespace RQ.Bot.BotInfrastructure
         {
             try
             {
+                var messageChat = callbackQuery.Message?.Chat;
+                
+                if(messageChat is null)
+                    return;
+                
                 var user = callbackQuery.From;
 
                 var responce = BotResponce.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
 
+                
+                
                 switch (responce.E)
                 {
                     case BotResponceType.FillRequest:
-                        await _entryQuestionnaire.FillLatestRequestAsync(callbackQuery.Message?.Chat, user);
-
+                        await _entryQuestionnaire.FillLatestRequestAsync(messageChat, user);
                         break;
 
                     case BotResponceType.CurrentCsv:
-                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, false, user);
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(messageChat, false, user);
                         break;
 
                     case BotResponceType.AllCsv:
-                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, true, user);
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(messageChat, true, user);
                         break;
 
                     case BotResponceType.CurrentXlsx:
-                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, false, user);
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(messageChat, false, user);
                         break;
 
                     case BotResponceType.AllXlsx:
-                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, true, user);
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(messageChat, true, user);
                         break;
 
                     case BotResponceType.Archive:
-                        await _entryAdmin.ArchiveAsync(callbackQuery.Message?.Chat!, user);
+                        await _entryAdmin.ArchiveAsync(messageChat, user);
                         break;
 
                     case BotResponceType.QFinish:
-                        await _entryQuestionnaire.CompleteAsync(callbackQuery.Message?.Chat!, user.Id);
+                        await _entryQuestionnaire.CompleteAsync(messageChat, user.Id);
                         break;
 
                     case BotResponceType.QReturn:
-                        await _entryQuestionnaire.ReturnToRootAsync(callbackQuery.Message?.Chat!, user.Id);
+                        await _entryQuestionnaire.ReturnToRootAsync(messageChat, user.Id);
                         break;
 
                     case BotResponceType.QMove:
-                        await _entryQuestionnaire.MoveMenuAsync(callbackQuery.Message?.Chat!, user, responce.P);
+                        await _entryQuestionnaire.MoveMenuAsync(messageChat, user, responce.P);
                         break;
 
                     case BotResponceType.QRem:
-                        await _entryQuestionnaire.RemoveAnswersForCategoryAsync(callbackQuery.Message?.Chat!, user,
+                        await _entryQuestionnaire.RemoveAnswersForCategoryAsync(messageChat, user,
                             responce.P);
                         break;
 
                     case BotResponceType.MessageToAdmins:
-                        await _entryAdmin.WaitForMessageToAdminsAsync(callbackQuery.Message?.Chat!, user);
+                        await _entryAdmin.WaitForMessageToAdminsAsync(messageChat, user);
                         break;
 
                     case BotResponceType.ReplyToUser:
-                        await _entryAdmin.WaitForMessageToUsersAsync(callbackQuery.Message?.Chat!, user,
+                        await _entryAdmin.WaitForMessageToUsersAsync(messageChat, user,
                             long.Parse(responce.P));
                         break;
 
                     case BotResponceType.SwitchNotifications:
-                        await _entryAdmin.SwitchNotificationsToUserAsync(callbackQuery.Message?.Chat!, user,
+                        await _entryAdmin.SwitchNotificationsToUserAsync(messageChat, user,
                             bool.Parse(responce.P));
+                        break;
+                    
+                    case BotResponceType.None:
+                        _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
+                        break;
+                    
+                    default:
+                        _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;
                 }
             }
