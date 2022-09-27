@@ -30,7 +30,7 @@ public static class BotExtension
                 if (string.IsNullOrEmpty(rawUsersId))
                     return new InitAdminParams();
 
-                return new InitAdminParams {UserId = rawUsersId.Split(',').Select(z => long.Parse(z.Trim())).ToArray()};
+                return new InitAdminParams {UsersUserIds = rawUsersId.Split(',').Select(z => long.Parse(z.Trim())).ToArray()};
             })
             .AddSingleton(_ =>
             {

@@ -59,11 +59,6 @@ internal class EntryAdmin
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Список администраторов",
-                        BotResponce.Create(BotResponceType.ListAdmins))
-                },
-                new[]
-                {
                     InlineKeyboardButton.WithCallbackData(
                         $"Уведомления о новых анкетах:{(rfUser.IsNotificationsOn ? "ВКЛ" : "ВЫКЛ")}",
                         BotResponce.Create(BotResponceType.SwitchNotifications, !rfUser.IsNotificationsOn))
@@ -96,7 +91,7 @@ internal class EntryAdmin
     
     public async Task ArchiveAsync(ChatId chatId, User user)
     {
-        if (_repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdministrator)
+        if (await IsAdmin(chatId,user))
         {
             _repo.ArchiveCurrentRequests();
 
