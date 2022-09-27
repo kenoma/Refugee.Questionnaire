@@ -1,5 +1,4 @@
-﻿using System.Collections.Specialized;
-using System.Text;
+﻿using System.Text;
 using Prometheus;
 using RQ.Bot.BotInfrastructure.Entry;
 using Telegram.Bot;

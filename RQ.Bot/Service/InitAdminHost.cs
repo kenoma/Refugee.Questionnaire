@@ -1,9 +1,6 @@
 ﻿using Bot.Repo;
 using RQ.Bot.BotInfrastructure;
 using RQ.DTO;
-using Telegram.Bot;
-using Telegram.Bot.Extensions.Polling;
-using Telegram.Bot.Types;
 
 namespace RQ.Bot.Service;
 

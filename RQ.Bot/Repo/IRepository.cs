@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using Microsoft.Extensions.Primitives;
-using RQ.DTO;
+﻿using RQ.DTO;
 
 namespace Bot.Repo;
 

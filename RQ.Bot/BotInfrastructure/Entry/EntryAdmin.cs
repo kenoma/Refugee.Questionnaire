@@ -1,5 +1,6 @@
 ﻿using Bot.Repo;
 using RQ.DTO;
+using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -38,7 +39,7 @@ internal class EntryAdmin
             {
                 var inlineKeyboard = new InlineKeyboardMarkup(new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Дать админа", BotResponce.Create("add_permitions", user.Id)),
+                    InlineKeyboardButton.WithCallbackData("Дать админа", BotResponce.Create(BotResponceType.add_permitions, user.Id)),
                 });
                 await SendMessageToUser(admin.ChatId,
                     $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
@@ -52,32 +53,32 @@ internal class EntryAdmin
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Текущие заявки в xlsx",
-                        BotResponce.Create("get_current_xlsx")),
+                        BotResponce.Create(BotResponceType.get_current_xlsx)),
                     InlineKeyboardButton.WithCallbackData("Все заявки в xlsx",
-                        BotResponce.Create("get_all_xlsx")),
+                        BotResponce.Create(BotResponceType.get_all_xlsx)),
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Текущие заявки в csv",
-                        BotResponce.Create("get_current_csv")),
+                        BotResponce.Create(BotResponceType.get_current_csv)),
                     InlineKeyboardButton.WithCallbackData("Все заявки в csv",
-                        BotResponce.Create("get_all_csv")),
+                        BotResponce.Create(BotResponceType.get_all_csv)),
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Архивировать текущие заявки",
-                        BotResponce.Create("archive"))
+                        BotResponce.Create(BotResponceType.archive))
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Список администраторов",
-                        BotResponce.Create("list_admins"))
+                        BotResponce.Create(BotResponceType.list_admins))
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
                         $"Уведомления о новых анкетах:{(rfUser.IsNotificationsOn ? "ВКЛ" : "ВЫКЛ")}",
-                        BotResponce.Create("switch_notifications", !rfUser.IsNotificationsOn))
+                        BotResponce.Create(BotResponceType.switch_notifications, !rfUser.IsNotificationsOn))
                 }
             });
 
@@ -189,7 +190,7 @@ internal class EntryAdmin
         var users = _repo.GetAllUsers();
         var promotedUsers = users.Where(z => z.PromotedByUser == user.Id).Select(z =>
             InlineKeyboardButton.WithCallbackData($"{z.Username} ({z.UserId})",
-                BotResponce.Create("remove_user", z.UserId)));
+                BotResponce.Create(BotResponceType.remove_user, z.UserId)));
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
 
@@ -287,7 +288,7 @@ internal class EntryAdmin
         var adminList = _repo.GetAdminUsers();
 
         var promotedUsers = InlineKeyboardButton.WithCallbackData($"Ответить пользователю",
-            BotResponce.Create("reply_to_user", userData.UserId));
+            BotResponce.Create(BotResponceType.reply_to_user, userData.UserId));
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
 
@@ -317,7 +318,7 @@ internal class EntryAdmin
 
         var inlineKeyboard = new InlineKeyboardMarkup(new[]
         {
-            InlineKeyboardButton.WithCallbackData("Ответить", BotResponce.Create("message_to_admins")),
+            InlineKeyboardButton.WithCallbackData("Ответить", BotResponce.Create(BotResponceType.message_to_admins)),
         });
 
         await SendMessageToUser(targetUser, messageText, inlineKeyboard);
