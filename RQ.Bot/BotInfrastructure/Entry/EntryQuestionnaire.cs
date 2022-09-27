@@ -19,7 +19,6 @@ public class EntryQuestionnaire
     private readonly Questionnaire _questionnaire;
     private readonly ILogger<EntryQuestionnaire> _logger;
     private readonly IEnumerable<IBotIntegration> _integrations;
-    private const int ButtonsPerMessage = 30;
     private const string CategoriesSeparator = "->";
 
     public EntryQuestionnaire(TelegramBotClient botClient, IRepository repo, Questionnaire questionnaire,
@@ -30,90 +29,6 @@ public class EntryQuestionnaire
         _questionnaire = questionnaire ?? throw new ArgumentNullException(nameof(questionnaire));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _integrations = integrations ?? throw new ArgumentNullException(nameof(integrations));
-    }
-
-    public async Task GetUserRefRequestAsync(Chat chatId, User user)
-    {
-        if (user == null)
-            return;
-
-        if (chatId == null)
-            return;
-
-        if (_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
-        {
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Html,
-                text: "Необходимо завершить заполнение активного запроса, прежде чем продолжить",
-                disableWebPagePreview: false
-            );
-
-            await IterateRequestAsync(chatId, refRequest);
-            return;
-        }
-
-        var allRequests = _repo.GetAllRequestFromUser(user.Id)
-            .OrderBy(z => z.TimeStamp)
-            .ToArray();
-
-        for (var skip = 0; skip < ButtonsPerMessage; skip += ButtonsPerMessage)
-        {
-            var buttons = allRequests
-                .Skip(skip)
-                .Take(ButtonsPerMessage)
-                .Select(z => new[]
-                {
-                    InlineKeyboardButton.WithCallbackData(z.ToString(), BotResponce.Create("auq", z.Id)),
-                });
-
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Markdown,
-                text: $"{skip} - {skip + ButtonsPerMessage}",
-                replyMarkup: new InlineKeyboardMarkup(buttons),
-                disableWebPagePreview: false
-            );
-        }
-
-        await _botClient.SendTextMessageAsync(
-            chatId: chatId,
-            parseMode: ParseMode.Markdown,
-            text:
-            $"Всего {allRequests.Length} заявок за период {allRequests.Select(z => z.TimeStamp).DefaultIfEmpty(DateTime.Now).Min()} - {allRequests.Select(z => z.TimeStamp).DefaultIfEmpty(DateTime.Now).Max()}",
-            disableWebPagePreview: false
-        );
-    }
-
-    public async Task ShowArchiveRequestAsync(Chat chatId, User user, Guid requestId)
-    {
-        if (user == null)
-            return;
-
-        if (chatId == null)
-            return;
-
-        if (_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
-        {
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Html,
-                text: "Необходимо завершить заполнение активного запроса, прежде чем продолжить",
-                disableWebPagePreview: false
-            );
-
-            await IterateRequestAsync(chatId, refRequest);
-            return;
-        }
-
-        var request = _repo.GetRequest(requestId);
-
-        await _botClient.SendTextMessageAsync(
-            chatId: chatId,
-            parseMode: ParseMode.Html,
-            text: string.Join("\r\n", request.Answers.Select(z => $"<b>{z.Question}</b>:{z.Answer}")),
-            disableWebPagePreview: false
-        );
     }
 
     public async Task FillLatestRequestAsync(ChatId chatId, User user)
@@ -372,21 +287,22 @@ public class EntryQuestionnaire
             var buttons = menu
                 .Select(z => new[]
                 {
-                    InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create("q_move", z)),
+                    InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create(BotResponceType.QMove, z)),
                 }).ToList();
 
             buttons.AddRange(itemsToRemove.Select(z =>
             {
                 return new[]
                 {
-                    InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}", BotResponce.Create("q_rem", z))
+                    InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}",
+                        BotResponce.Create(BotResponceType.QRem, z))
                 };
             }));
 
             buttons.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create("q_finish")),
-                InlineKeyboardButton.WithCallbackData("Обратно", BotResponce.Create("q_return")),
+                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create(BotResponceType.QFinish)),
+                InlineKeyboardButton.WithCallbackData("Обратно", BotResponce.Create(BotResponceType.QReturn)),
             });
 
             try

@@ -21,23 +21,38 @@ internal class InitAdminHost : BackgroundService
     /// <inheritdoc />
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_adminParams.UserId.HasValue)
+        if (!_adminParams.UserId.Any())
         {
             _logger.LogInformation("No --adminID params passed to app");
             return Task.CompletedTask;
         }
 
-        if (_repository.GetAdminUsers().Any())
+        var allUsers = _repository.GetAllUsers();
+        foreach (var userData in allUsers)
         {
-            _logger.LogInformation("There are already admins at database");
-            return Task.CompletedTask;
+            if (userData.IsAdministrator)
+            {
+                userData.IsAdministrator = false;
+                _repository.UpsertUser(userData);
+            }
         }
 
-        _repository.UpsertUser(new UserData
+        foreach (var userId in _adminParams.UserId)
         {
-            UserId = _adminParams.UserId.Value,
-            IsAdmin = true
-        });
+            if (_repository.TryGetUserById(userId, out var data))
+            {
+                data.IsAdministrator = true;
+                _repository.UpsertUser(data);
+            }
+            else
+            {
+                _repository.UpsertUser(new UserData
+                {
+                    IsAdministrator = true,
+                    UserId = userId
+                });
+            }
+        }
 
         _logger.LogInformation("Initial admin added {AdminId}", _adminParams.UserId);
         return Task.CompletedTask;
