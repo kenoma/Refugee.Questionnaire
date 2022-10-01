@@ -5,5 +5,5 @@ public class InitAdminParams
     /// <summary>
     ///     Айди пользователя в tg
     /// </summary>
-    public long? UserId { get; set; }
+    public long[] UsersUserIds { get; init; } = Array.Empty<long>();
 }

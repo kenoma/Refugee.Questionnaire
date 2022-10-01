@@ -1,11 +1,13 @@
 ﻿using Bot.Repo;
+using RQ.Bot.BotInfrastructure.Entry;
 using RQ.DTO;
+using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace RQ.Bot.BotInfrastructure.Entry;
+namespace RQ.Bot.BotInfrastructure.Entries;
 
 internal class EntryAdmin
 {
@@ -25,25 +27,12 @@ internal class EntryAdmin
         if (chatId == null)
             return;
 
-        if (!_repo.TryGetUserById(user.Id, out var rfUser) || !rfUser.IsAdmin)
+        if (!_repo.TryGetUserById(user.Id, out var rfUser) || !rfUser.IsAdministrator)
         {
             var noAuthText =
                 $"Вас нет в списках доверенных пользователей, администраторы осведомлены о вас.";
 
             await SendMessageToUser(chatId, noAuthText);
-
-            var adminList = _repo.GetAdminUsers();
-
-            foreach (var admin in adminList)
-            {
-                var inlineKeyboard = new InlineKeyboardMarkup(new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Дать админа", BotResponce.Create("add_permitions", user.Id)),
-                });
-                await SendMessageToUser(admin.ChatId,
-                    $"Пользователь {user.Username} ({user.FirstName} {user.LastName}) просит дать ему администраторские привелегии.",
-                    admin.IsSuperAdmin ? inlineKeyboard : null);
-            }
         }
         else
         {
@@ -52,32 +41,27 @@ internal class EntryAdmin
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Текущие заявки в xlsx",
-                        BotResponce.Create("get_current_xlsx")),
+                        BotResponce.Create(BotResponceType.CurrentXlsx)),
                     InlineKeyboardButton.WithCallbackData("Все заявки в xlsx",
-                        BotResponce.Create("get_all_xlsx")),
+                        BotResponce.Create(BotResponceType.AllXlsx)),
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Текущие заявки в csv",
-                        BotResponce.Create("get_current_csv")),
+                        BotResponce.Create(BotResponceType.CurrentCsv)),
                     InlineKeyboardButton.WithCallbackData("Все заявки в csv",
-                        BotResponce.Create("get_all_csv")),
+                        BotResponce.Create(BotResponceType.AllCsv)),
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Архивировать текущие заявки",
-                        BotResponce.Create("archive"))
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Список администраторов",
-                        BotResponce.Create("list_admins"))
+                        BotResponce.Create(BotResponceType.Archive))
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
                         $"Уведомления о новых анкетах:{(rfUser.IsNotificationsOn ? "ВКЛ" : "ВЫКЛ")}",
-                        BotResponce.Create("switch_notifications", !rfUser.IsNotificationsOn))
+                        BotResponce.Create(BotResponceType.SwitchNotifications, !rfUser.IsNotificationsOn))
                 }
             });
 
@@ -89,61 +73,25 @@ internal class EntryAdmin
 
     public async Task<bool> IsAdmin(ChatId chatId, User user)
     {
-        if (!_repo.GetAdminUsers().Any())
+        if (!_repo.TryGetUserById(user.Id, out _))
         {
-            if (!_repo.TryGetUserById(user.Id, out var userData))
+            _repo.UpsertUser(new UserData
             {
-                _repo.UpsertUser(new UserData
-                {
-                    ChatId = chatId.Identifier!.Value,
-                    UserId = user.Id,
-                    IsAdmin = true,
-                    Username = user.Username!,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName!,
-                    PromotedByUser = -1,
-                    Created = DateTime.Now
-                });
-            }
-            else
-            {
-                userData.IsAdmin = true;
-                userData.PromotedByUser = -1;
-                _repo.UpsertUser(userData);
-            }
-
-            await SendMessageToUser(chatId,
-                "Вы первый пользователь бота, вам автоматически выданы администраторские привелегии.");
+                ChatId = chatId.Identifier!.Value,
+                UserId = user.Id,
+                Username = user.Username!,
+                FirstName = user.FirstName,
+                LastName = user.LastName!,
+                Created = DateTime.Now
+            });
         }
 
-        return _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdmin;
+        return _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdministrator;
     }
-
-    public async Task PromoteUserAsync(long adminUserId, long promotedUserId)
-    {
-        if (_repo.TryGetUserById(promotedUserId, out var rfUser) &&
-            _repo.TryGetUserById(adminUserId, out var adminUser))
-        {
-            rfUser.IsAdmin = true;
-            rfUser.PromotedByUser = adminUserId;
-            _repo.UpsertUser(rfUser);
-
-            var adminList = _repo.GetAdminUsers();
-
-            foreach (var admin in adminList)
-            {
-                await SendMessageToUser(admin.ChatId,
-                    $"Пользователь @{rfUser.Username} повышен до администратора пользователем @{adminUser.Username}.");
-            }
-
-            await SendMessageToUser(rfUser.ChatId,
-                $"Вам выданы права администратора пользователем @{adminUser.Username}");
-        }
-    }
-
+    
     public async Task ArchiveAsync(ChatId chatId, User user)
     {
-        if (_repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdmin)
+        if (await IsAdmin(chatId,user))
         {
             _repo.ArchiveCurrentRequests();
 
@@ -163,11 +111,9 @@ internal class EntryAdmin
             {
                 ChatId = chatId.Identifier!.Value,
                 UserId = user.Id,
-                IsAdmin = false,
                 Username = user.Username!,
                 FirstName = user.FirstName,
                 LastName = user.LastName!,
-                PromotedByUser = -1,
                 Created = DateTime.Now
             });
         }
@@ -182,45 +128,6 @@ internal class EntryAdmin
         }
 
         return Task.CompletedTask;
-    }
-
-    public async Task ListAdminsApprovedByUsersAsync(ChatId messageChat, User user)
-    {
-        var users = _repo.GetAllUsers();
-        var promotedUsers = users.Where(z => z.PromotedByUser == user.Id).Select(z =>
-            InlineKeyboardButton.WithCallbackData($"{z.Username} ({z.UserId})",
-                BotResponce.Create("remove_user", z.UserId)));
-
-        var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
-
-        await SendMessageToUser(messageChat, "Список администраторов, назначенных вами", inlineKeyboard);
-    }
-
-    public async Task RevokeAdminAsync(ChatId messageChat, long userId)
-    {
-        var users = _repo.GetAllUsers();
-        var revokedList = new HashSet<long>(new[] { userId });
-
-        var counter = 0;
-
-        while (counter != revokedList.Count)
-        {
-            counter = revokedList.Count;
-            foreach (var user in users.Where(z => revokedList.Contains(z.PromotedByUser)))
-            {
-                revokedList.Add(user.UserId);
-            }
-        }
-
-        var usersToRevoke = users.Where(z => revokedList.Contains(z.UserId));
-        foreach (var user in usersToRevoke)
-        {
-            user.IsAdmin = false;
-            user.PromotedByUser = 0;
-            _repo.UpsertUser(user);
-            await SendMessageToUser(user.ChatId, "Вас лишили прав администратора");
-            _logger.LogInformation("User {UserId} was removed from admin list", user.UserId);
-        }
     }
 
     private async Task SendMessageToUser(ChatId chatId, string msg, InlineKeyboardMarkup inlineKeyboardMarkup = default)
@@ -287,7 +194,7 @@ internal class EntryAdmin
         var adminList = _repo.GetAdminUsers();
 
         var promotedUsers = InlineKeyboardButton.WithCallbackData($"Ответить пользователю",
-            BotResponce.Create("reply_to_user", userData.UserId));
+            BotResponce.Create(BotResponceType.ReplyToUser, userData.UserId));
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
 
@@ -317,7 +224,7 @@ internal class EntryAdmin
 
         var inlineKeyboard = new InlineKeyboardMarkup(new[]
         {
-            InlineKeyboardButton.WithCallbackData("Ответить", BotResponce.Create("message_to_admins")),
+            InlineKeyboardButton.WithCallbackData("Ответить", BotResponce.Create(BotResponceType.MessageToAdmins)),
         });
 
         await SendMessageToUser(targetUser, messageText, inlineKeyboard);
@@ -336,7 +243,7 @@ internal class EntryAdmin
 
     public async Task SwitchNotificationsToUserAsync(Chat messageChat, User user, bool isNotificationsOn)
     {
-        if (_repo.TryGetUserById(user.Id, out var userData))
+        if (_repo.TryGetUserById(user.Id, out var userData) && userData.IsAdministrator)
         {
             userData.IsNotificationsOn = isNotificationsOn;
 
@@ -346,10 +253,6 @@ internal class EntryAdmin
                     ? "Вы теперь будете получать уведомления о новых анкетах"
                     : "Вы отключили уведомления");
             _logger.LogInformation("User {UserId} switches notifications to {IsNotAll}", user.Id, isNotificationsOn);
-        }
-        else
-        {
-            _logger.LogInformation("Failed to get user {UserId} data", user.Id);
         }
     }
 }

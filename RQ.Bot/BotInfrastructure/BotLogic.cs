@@ -1,7 +1,8 @@
-﻿using System.Collections.Specialized;
-using System.Text;
+﻿using System.Text;
 using Prometheus;
+using RQ.Bot.BotInfrastructure.Entries;
 using RQ.Bot.BotInfrastructure.Entry;
+using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
@@ -78,7 +79,7 @@ namespace RQ.Bot.BotInfrastructure
             }
         }
 
-      
+
         private async Task BotOnPollAnswer(PollAnswer updatePollAnswer)
         {
             _logger.LogInformation("New vote {@Vote}", updatePollAnswer);
@@ -93,7 +94,7 @@ namespace RQ.Bot.BotInfrastructure
 
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
             await _entryAdmin.CreateIfNotExistUser(message.Chat.Id, user);
-            
+
             _logger.LogInformation("Receive message type: {MessageType}: {MessageText} from {Member} ({UserId})",
                 message.Type,
                 message.Text, chatMember.User.Username, chatMember.User.Id);
@@ -105,7 +106,7 @@ namespace RQ.Bot.BotInfrastructure
             {
                 return;
             }
-            
+
             if (await _entryAdmin.IsUserReplied(user.Id, message.Text!))
             {
                 return;
@@ -162,11 +163,12 @@ namespace RQ.Bot.BotInfrastructure
                         $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
                 .AppendLine("\r\n`------------------------------------------`\r\n")
                 .ToString();
-            
+
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create("fill_request")),
-                InlineKeyboardButton.WithCallbackData("Написать администраторам", BotResponce.Create("message_to_admins")),
+                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create(BotResponceType.FillRequest)),
+                InlineKeyboardButton.WithCallbackData("Написать администраторам",
+                    BotResponce.Create(BotResponceType.MessageToAdmins)),
             });
 
             await _bot.SendTextMessageAsync(
@@ -183,89 +185,83 @@ namespace RQ.Bot.BotInfrastructure
         {
             try
             {
+                var messageChat = callbackQuery.Message?.Chat;
+                
+                if(messageChat is null)
+                    return;
+                
                 var user = callbackQuery.From;
 
                 var responce = BotResponce.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
 
+                
+                
                 switch (responce.E)
                 {
-                    case "all_user_queries":
-                        await _entryQuestionnaire.GetUserRefRequestAsync(callbackQuery.Message?.Chat!, user);
+                    case BotResponceType.FillRequest:
+                        await _entryQuestionnaire.FillLatestRequestAsync(messageChat, user);
+                        break;
 
+                    case BotResponceType.CurrentCsv:
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(messageChat, false, user);
                         break;
-                        
-                    case "fill_request":
-                        await _entryQuestionnaire.FillLatestRequestAsync(callbackQuery.Message?.Chat, user);
 
+                    case BotResponceType.AllCsv:
+                        await _entryDownloadCsv.GetRequestsInCsvAsync(messageChat, true, user);
                         break;
-                        
-                    case "auq":
-                        await _entryQuestionnaire.ShowArchiveRequestAsync(callbackQuery.Message?.Chat!, user,
-                            Guid.Parse(responce.P));
+
+                    case BotResponceType.CurrentXlsx:
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(messageChat, false, user);
                         break;
-                    
-                    case "add_permitions":
-                        await _entryAdmin.PromoteUserAsync(user.Id, long.Parse(responce.P));
+
+                    case BotResponceType.AllXlsx:
+                        await _entryDownloadCsv.GetRequestsInXlsxAsync(messageChat, true, user);
                         break;
-                    
-                    case "get_current_csv":
-                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, false);
+
+                    case BotResponceType.Archive:
+                        await _entryAdmin.ArchiveAsync(messageChat, user);
                         break;
-                    
-                    case "get_all_csv":
-                        await _entryDownloadCsv.GetRequestsInCsvAsync(callbackQuery.Message?.Chat!, true);
+
+                    case BotResponceType.QFinish:
+                        await _entryQuestionnaire.CompleteAsync(messageChat, user.Id);
                         break;
-                    
-                    case "get_current_xlsx":
-                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, false);
+
+                    case BotResponceType.QReturn:
+                        await _entryQuestionnaire.ReturnToRootAsync(messageChat, user.Id);
                         break;
-                    
-                    case "get_all_xlsx":
-                        await _entryDownloadCsv.GetRequestsInXlsxAsync(callbackQuery.Message?.Chat!, true);
+
+                    case BotResponceType.QMove:
+                        await _entryQuestionnaire.MoveMenuAsync(messageChat, user, responce.P);
                         break;
-                        
-                    case "archive":
-                        await _entryAdmin.ArchiveAsync(callbackQuery.Message?.Chat!, user);
+
+                    case BotResponceType.QRem:
+                        await _entryQuestionnaire.RemoveAnswersForCategoryAsync(messageChat, user,
+                            responce.P);
                         break;
-                    
-                    case "q_finish":
-                        await _entryQuestionnaire.CompleteAsync(callbackQuery.Message?.Chat!, user.Id);
+
+                    case BotResponceType.MessageToAdmins:
+                        await _entryAdmin.WaitForMessageToAdminsAsync(messageChat, user);
                         break;
-                    
-                    case "q_return":
-                        await _entryQuestionnaire.ReturnToRootAsync(callbackQuery.Message?.Chat!, user.Id);
-                        break;
-                        
-                    case "q_move":
-                        await _entryQuestionnaire.MoveMenuAsync(callbackQuery.Message?.Chat!, user, responce.P);
-                        break;
-                        
-                    case "q_rem":
-                        await _entryQuestionnaire.RemoveAnswersForCategoryAsync(callbackQuery.Message?.Chat!, user, responce.P);
-                        break;
-                    
-                    case "list_admins":
-                        await _entryAdmin.ListAdminsApprovedByUsersAsync(callbackQuery.Message?.Chat!, user);
-                        break;
-                        
-                    case "remove_user":
-                        await _entryAdmin.RevokeAdminAsync(callbackQuery.Message?.Chat!, long.Parse(responce.P));
-                        break;
-                    case "message_to_admins":
-                        await _entryAdmin.WaitForMessageToAdminsAsync(callbackQuery.Message?.Chat!, user);
-                        break;
-                    
-                    case "reply_to_user":
-                        await _entryAdmin.WaitForMessageToUsersAsync(callbackQuery.Message?.Chat!, user,
+
+                    case BotResponceType.ReplyToUser:
+                        await _entryAdmin.WaitForMessageToUsersAsync(messageChat, user,
                             long.Parse(responce.P));
                         break;
-                    case "switch_notifications":
-                        await _entryAdmin.SwitchNotificationsToUserAsync(callbackQuery.Message?.Chat!, user,
+
+                    case BotResponceType.SwitchNotifications:
+                        await _entryAdmin.SwitchNotificationsToUserAsync(messageChat, user,
                             bool.Parse(responce.P));
                         break;
-                        
+                    
+                    case BotResponceType.None:
+                        _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
+                        break;
+                    
+                    default:
+                        _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
+                        break;
                 }
             }
             catch (Exception e)

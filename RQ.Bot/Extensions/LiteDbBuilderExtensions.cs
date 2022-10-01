@@ -1,7 +1,4 @@
-﻿using System;
-using Bot.Repo;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Bot.Repo;
 
 namespace RQ.Bot.Extensions;
 

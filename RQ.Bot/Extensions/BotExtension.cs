@@ -1,4 +1,5 @@
 ﻿using RQ.Bot.BotInfrastructure;
+using RQ.Bot.BotInfrastructure.Entries;
 using RQ.Bot.BotInfrastructure.Entry;
 using RQ.Bot.Service;
 using Telegram.Bot;
@@ -25,11 +26,11 @@ public static class BotExtension
             .AddTransient<EntryDownloadCsv>()
             .AddSingleton(_ =>
             {
-                var rawUserId = builder.Configuration["adminID"];
+                var rawUsersId = builder.Configuration["adminID"];
+                if (string.IsNullOrEmpty(rawUsersId))
+                    return new InitAdminParams();
 
-                return long.TryParse(rawUserId, out var userId)
-                    ? new InitAdminParams { UserId = userId }
-                    : new InitAdminParams();
+                return new InitAdminParams {UsersUserIds = rawUsersId.Split(',').Select(z => long.Parse(z.Trim())).ToArray()};
             })
             .AddSingleton(_ =>
             {

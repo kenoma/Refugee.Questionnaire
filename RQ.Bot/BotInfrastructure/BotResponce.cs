@@ -1,36 +1,36 @@
-﻿using System.Web;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using RQ.DTO.Enum;
 
 namespace RQ.Bot.BotInfrastructure.Entry;
 
 internal class BotResponce
 {
-    public string E { get; set; } = string.Empty;
+    public BotResponceType E { get; set; } = BotResponceType.None;
 
     public string P { get; set; }
 
 
-    public static string Create(string entry)
+    public static string Create(BotResponceType entry)
     {
         return JsonConvert.SerializeObject(new BotResponce { E = entry});
     }
 
-    public static string Create(string entry, string payload)
+    public static string Create(BotResponceType entry, string payload)
     {
         return JsonConvert.SerializeObject(new BotResponce { E = entry, P = payload});
     }
     
-    public static string Create(string entry, Guid id)
+    public static string Create(BotResponceType entry, Guid id)
     {
         return JsonConvert.SerializeObject(new BotResponce { E = entry, P = id.ToString("N")});
     }
     
-    public static string Create(string entry, long userId)
+    public static string Create(BotResponceType entry, long userId)
     {
         return JsonConvert.SerializeObject(new BotResponce { E = entry, P = userId.ToString() });
     }
     
-    public static string Create(string entry, bool switchValue)
+    public static string Create(BotResponceType entry, bool switchValue)
     {
         return JsonConvert.SerializeObject(new BotResponce { E = entry, P = switchValue.ToString() });
     }

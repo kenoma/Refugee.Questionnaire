@@ -110,7 +110,7 @@ public class LiteDbRepo : IRepository
         collection.EnsureIndex(z => z.Token);
         collection.EnsureIndex(z => z.UserId, unique: true);
 
-        return collection.Find(z => z.IsAdmin).ToArray();
+        return collection.Find(z => z.IsAdministrator).ToArray();
     }
 
     public UserData[] GetAllUsers()
