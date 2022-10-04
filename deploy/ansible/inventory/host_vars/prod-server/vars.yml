@@ -7,7 +7,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 25
     working_directory: "/opt/questionnaire-bot/instances/9023"
     telegram_token: "{{ vault_questionnaire_bot_9023_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9023_telegram_admin_id }}"
@@ -42,7 +42,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 20
     working_directory: "/opt/questionnaire-bot/instances/9231"
     telegram_token: "{{ vault_questionnaire_bot_9231_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9231_telegram_admin_id }}"
@@ -64,7 +64,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 24
     working_directory: "/opt/questionnaire-bot/instances/9261"
     telegram_token: "{{ vault_questionnaire_bot_9261_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9261_telegram_admin_id }}"
@@ -75,7 +75,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 23
     working_directory: "/opt/questionnaire-bot/instances/9082"
     telegram_token: "{{ vault_questionnaire_bot_9082_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9082_telegram_admin_id }}"
@@ -97,7 +97,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 6
     working_directory: "/opt/questionnaire-bot/instances/9131"
     telegram_token: "{{ vault_questionnaire_bot_9131_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9131_telegram_admin_id }}"
@@ -110,7 +110,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 20
     working_directory: "/opt/questionnaire-bot/instances/9331"
     telegram_token: "{{ vault_questionnaire_bot_9331_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9331_telegram_admin_id }}"
@@ -132,7 +132,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 23
     working_directory: "/opt/questionnaire-bot/instances/9182"
     telegram_token: "{{ vault_questionnaire_bot_9182_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9182_telegram_admin_id }}"
@@ -143,7 +143,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 19
     working_directory: "/opt/questionnaire-bot/instances/9431"
     telegram_token: "{{ vault_questionnaire_bot_9431_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9431_telegram_admin_id }}"
@@ -154,7 +154,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 21
     working_directory: "/opt/questionnaire-bot/instances/9531"
     telegram_token: "{{ vault_questionnaire_bot_9531_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9531_telegram_admin_id }}"
@@ -165,7 +165,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 22
     working_directory: "/opt/questionnaire-bot/instances/9278"
     telegram_token: "{{ vault_questionnaire_bot_9278_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9278_telegram_admin_id }}"
@@ -176,7 +176,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 22
     working_directory: "/opt/questionnaire-bot/instances/9378"
     telegram_token: "{{ vault_questionnaire_bot_9378_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9378_telegram_admin_id }}"
