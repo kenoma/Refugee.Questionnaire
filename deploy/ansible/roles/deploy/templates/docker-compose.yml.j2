@@ -21,6 +21,10 @@ services:
       RQB_QUESTIONS_PATH: "{{ instance.quest_container_path }}"
       RQB_DB_PATH: "/app/db"
       RQB_INSTANCE_CONTAINER_NAME: "{{ instance.container_name }}"
+      RQB_NEXTCLOUD_LOGIN: "{{ instance.nextcloud_login }}"
+      RQB_NEXTCLOUD_PASSWORD: "{{ instance.nextcloud_password }}"
+      RQB_NEXTCLOUD_URL: "{{ instance.nextcloud_url }}"
+      RQB_NEXTCLOUD_DECK_INDEX: "{{ instance.nextcloud_deck_index }}"
     ports:
       - "127.0.0.1:{{ instance.port }}:9000/tcp"
     volumes:
