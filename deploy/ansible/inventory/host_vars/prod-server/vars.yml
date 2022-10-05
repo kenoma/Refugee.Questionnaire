@@ -29,7 +29,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 6
     working_directory: "/opt/questionnaire-bot/instances/9031"
     telegram_token: "{{ vault_questionnaire_bot_9031_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9031_telegram_admin_id }}"
@@ -97,7 +97,7 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 6
+    nextcloud_deck_index: 18
     working_directory: "/opt/questionnaire-bot/instances/9131"
     telegram_token: "{{ vault_questionnaire_bot_9131_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9131_telegram_admin_id }}"
