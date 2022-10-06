@@ -53,12 +53,12 @@ questionnaire_bot_instances:
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
     nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
-    nextcloud_deck_index: 4
+    nextcloud_deck_index: 26
     working_directory: "/opt/questionnaire-bot/instances/9036"
     telegram_token: "{{ vault_questionnaire_bot_9036_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9036_telegram_admin_id }}"
     quest_container_path: "/app/questions/ref-9036.csv"
-    enabled: no
+    enabled: yes
     container_name: "help_refugees_voronezh_bot"
   - port: 9261
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
