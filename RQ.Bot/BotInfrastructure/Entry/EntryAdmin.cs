@@ -71,7 +71,7 @@ internal class EntryAdmin
         }
     }
 
-    public async Task<bool> IsAdmin(ChatId chatId, User user)
+    public Task<bool> IsAdmin(ChatId chatId, User user)
     {
         if (!_repo.TryGetUserById(user.Id, out _))
         {
@@ -86,7 +86,9 @@ internal class EntryAdmin
             });
         }
 
-        return _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdministrator;
+        var isAdministrator = _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdministrator;
+        
+        return Task.FromResult(isAdministrator);
     }
     
     public async Task ArchiveAsync(ChatId chatId, User user)
