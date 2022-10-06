@@ -135,16 +135,36 @@ public class EntryQuestionnaire
         }
     }
 
-    private async Task SendQuestMessageToUser(ChatId chatId, QuestionnaireEntry questEntry)
+    private async Task SendTextMessage(ChatId chatId, QuestionnaireEntry entry)
     {
-        if (string.IsNullOrEmpty(questEntry.Attachment))
+        if (entry.PossibleResponses.Any())
+        {
+            var buttons = entry.PossibleResponses
+                .Select(response => new KeyboardButton(response));
+
+            var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons)
+            {
+                ResizeKeyboard = true
+            };
+
+            await _botClient.SendTextMessageAsync(chatId, entry.Text, replyMarkup: replyKeyboardMarkup);
+        }
+        else
         {
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 parseMode: ParseMode.Markdown,
-                text: questEntry.Text,
+                text: entry.Text,
                 disableWebPagePreview: false
             );
+        }
+    }
+
+    private async Task SendQuestMessageToUser(ChatId chatId, QuestionnaireEntry questEntry)
+    {
+        if (string.IsNullOrEmpty(questEntry.Attachment))
+        {
+            await SendTextMessage(chatId, questEntry);
         }
         else
         {
