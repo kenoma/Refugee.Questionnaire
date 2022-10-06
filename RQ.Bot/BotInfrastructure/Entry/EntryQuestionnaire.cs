@@ -135,6 +135,14 @@ public class EntryQuestionnaire
         }
     }
 
+    /// <summary>
+    /// Отправить текстовое сообщение.
+    /// <remarks>
+    /// Если текстовое сообщение содержит варианты ответов, то они также будут отрисованны.
+    /// </remarks>
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="entry">Вопрос.</param>
     private async Task SendTextMessage(ChatId chatId, QuestionnaireEntry entry)
     {
         if (entry.PossibleResponses.Any())
