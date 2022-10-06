@@ -1,9 +1,9 @@
 ﻿using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using RQ.Bot.Domain;
+using RQ.Bot.Domain.Enum;
 using RQ.Bot.Extensions.CsvUtils;
-using RQ.DTO;
-using RQ.DTO.Enum;
 
 namespace RQ.Bot.Extensions;
 
@@ -11,7 +11,7 @@ public static class QuestionnaireExtension
 {
     public static WebApplicationBuilder UseQuestionnaire(this WebApplicationBuilder builder)
     {
-        builder.Services.AddSingleton(z =>
+        builder.Services.AddSingleton(_ =>
         {
             var pathToQuest = builder.Configuration["pathToQuest"];
 
@@ -26,29 +26,36 @@ public static class QuestionnaireExtension
                 BadDataFound = null,
                 DetectDelimiter = true,
                 DetectDelimiterValues = new[] { ",", ";", "\t" },
-                TrimOptions = TrimOptions.InsideQuotes| TrimOptions.Trim,
+                TrimOptions = TrimOptions.InsideQuotes | TrimOptions.Trim,
                 HeaderValidated = null
             };
             
             using var reader = new StreamReader(pathToQuest);
             using var csv = new CsvReader(reader, config);
             csv.Context.RegisterClassMap<QuestionnaireEntryClassMap>();
-            var records = csv.GetRecords<QuestionnaireEntry>()
-                .ToArray();
+            var records = csv.GetRecords<QuestionnaireEntry>();
 
-            foreach (var rec in records)
+            var questions = new Questionnaire();
+
+            foreach (var record in records)
             {
-                rec.Text = rec.Text.Trim();
+                record.Text = record.Text.Trim();
+                
+                switch (record.AutopassMode)
+                {
+                    case AutopassMode.None or AutopassMode.Simple: 
+                        questions.Entries.Add(record);
+                        break;
+                    case AutopassMode.Headline:
+                        questions.Headliners.Add(record);
+                        break;
+                    case AutopassMode.Finisher:
+                        questions.Finishers.Add(record);
+                        break;
+                }
             }
 
-            var questionnaire = new Questionnaire
-            {
-                Entries = records
-                    .Where(z => z.AutopassMode is AutopassMode.None or AutopassMode.Simple).ToArray(),
-                Headliners = records.Where(z => z.AutopassMode == AutopassMode.Headline).ToArray(),
-                Finishers = records.Where(z => z.AutopassMode == AutopassMode.Finisher).ToArray(),
-            };
-            return questionnaire;
+            return questions;
         });
 
         return builder;
