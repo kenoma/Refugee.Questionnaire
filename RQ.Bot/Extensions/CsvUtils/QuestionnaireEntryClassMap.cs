@@ -1,6 +1,6 @@
 using CsvHelper.Configuration;
-using RQ.DTO;
-using RQ.DTO.Enum;
+using RQ.Bot.Domain;
+using RQ.Bot.Domain.Enum;
 
 namespace RQ.Bot.Extensions.CsvUtils;
 
@@ -16,5 +16,6 @@ public sealed class QuestionnaireEntryClassMap : ClassMap<QuestionnaireEntry>
         Map(p => p.AutopassMode).TypeConverter<CustomEnumConverter<AutopassMode>>();
         Map(p => p.IsGroupSwitch).TypeConverter<CustomByteConverter>();
         Map(p => p.Attachment);
+        Map(entry => entry.PossibleResponses).TypeConverter<CustomStringArrayConverter>(); 
     }
 }
