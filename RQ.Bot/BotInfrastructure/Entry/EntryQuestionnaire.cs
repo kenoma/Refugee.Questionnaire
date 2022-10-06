@@ -1,8 +1,9 @@
 ﻿using System.Text.RegularExpressions;
 using Bot.Repo;
+using RQ.Bot.Domain;
+using RQ.Bot.Domain.Enum;
 using RQ.Bot.Integrations;
 using RQ.DTO;
-using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -287,7 +288,7 @@ public class EntryQuestionnaire
             var buttons = menu
                 .Select(z => new[]
                 {
-                    InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create(BotResponceType.QMove, z)),
+                    InlineKeyboardButton.WithCallbackData(z!, BotResponse.Create(BotResponseType.QMove, z)),
                 }).ToList();
 
             buttons.AddRange(itemsToRemove.Select(z =>
@@ -295,14 +296,14 @@ public class EntryQuestionnaire
                 return new[]
                 {
                     InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}",
-                        BotResponce.Create(BotResponceType.QRem, z))
+                        BotResponse.Create(BotResponseType.QRem, z))
                 };
             }));
 
             buttons.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create(BotResponceType.QFinish)),
-                InlineKeyboardButton.WithCallbackData("Обратно", BotResponce.Create(BotResponceType.QReturn)),
+                InlineKeyboardButton.WithCallbackData("Завершить", BotResponse.Create(BotResponseType.QFinish)),
+                InlineKeyboardButton.WithCallbackData("Обратно", BotResponse.Create(BotResponseType.QReturn)),
             });
 
             try

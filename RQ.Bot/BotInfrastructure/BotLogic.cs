@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Prometheus;
-using RQ.Bot.BotInfrastructure.Entries;
 using RQ.Bot.BotInfrastructure.Entry;
 using RQ.Bot.Domain.Enum;
 using Telegram.Bot;
