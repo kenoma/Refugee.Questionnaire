@@ -116,15 +116,7 @@ public class EntryQuestionnaire
             if (unanswered == null)
             {
                 _repo.UpdateRefRequest(refRequest);
-
-                var previewBody = $"Раздел {refRequest.CurrentCategory} заполнен";
-
-                await _botClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    parseMode: ParseMode.Html,
-                    text: previewBody,
-                    disableWebPagePreview: false
-                );
+                
                 await ReturnToRootAsync(chatId, refRequest.UserId);
             }
             else
@@ -294,11 +286,11 @@ public class EntryQuestionnaire
             {
                 return new[]
                 {
-                    InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}",
+                    InlineKeyboardButton.WithCallbackData($"Сбросить ответы: {z}",
                         BotResponce.Create(BotResponceType.QRem, z))
                 };
             }));
-
+            
             buttons.Add(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create(BotResponceType.QFinish)),
@@ -408,18 +400,7 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(refRequest);
         _logger.LogInformation("Ref request {RefId} backed to root {UserId}", refRequest.Id, userId);
-
-        if (refRequest.Answers.Any())
-        {
-            await _botClient.SendTextMessageAsync(
-                chatId: messageChat,
-                parseMode: ParseMode.Markdown,
-                text:
-                $"Заполненные данные\r\n{string.Join("\r\n", refRequest.Answers.Select(z => $"`{z.Question.PadRight(20).Substring(0, 20)}|\t`{z.Answer}"))}",
-                disableWebPagePreview: false
-            );
-        }
-
+        
         await TryProcessStateMachineAsync(messageChat, userId, string.Empty);
     }
 
@@ -463,7 +444,7 @@ public class EntryQuestionnaire
             chatId: messageChat,
             parseMode: ParseMode.Markdown,
             text:
-            $"Записи раздела {catToRemove} и дочерние были удалены",
+            $"Записи раздела {catToRemove} и дочерние были удалены, теперь вы можете снова их заполнить",
             disableWebPagePreview: false
         );
         await TryProcessStateMachineAsync(messageChat, user.Id, string.Empty);
