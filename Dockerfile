@@ -13,7 +13,11 @@ ENV RQB_TELEGRAM_TOKEN="xxxxxxx:yyyyyyyyyyyyy" \
     RQB_TELEGRAM_ADMIN_ID="0" \
     RQB_DB_PATH="/app/db" \
     RQB_QUESTIONS_PATH="/app/questions/sample.csv" \    
-    RQB_URLS="http://*:9000"
+    RQB_URLS="http://*:9000" \
+    RQB_NEXTCLOUD_LOGIN="" \
+    RQB_NEXTCLOUD_PASSWORD="" \
+    RQB_NEXTCLOUD_URL="" \
+    RQB_NEXTCLOUD_DECK_INDEX="" 
 EXPOSE 9000
 WORKDIR /app
 COPY --from=publish /build/app/* ./
@@ -25,4 +29,8 @@ CMD dotnet RQ.Bot.dll \
   --dbPath $RQB_DB_PATH \
   --botToken $RQB_TELEGRAM_TOKEN \
   --adminID $RQB_TELEGRAM_ADMIN_ID \
-  --pathToQuest $RQB_QUESTIONS_PATH
+  --pathToQuest $RQB_QUESTIONS_PATH \
+  --nextcloudLogin $RQB_NEXTCLOUD_LOGIN \
+  --nextcloudPass $RQB_NEXTCLOUD_PASSWORD \
+  --nextCloudUrl $RQB_NEXTCLOUD_URL \
+  --nextcloudDeckIndex $RQB_NEXTCLOUD_DECK_INDEX

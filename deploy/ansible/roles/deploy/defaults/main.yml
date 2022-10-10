@@ -8,6 +8,10 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/sample.csv"
     enabled: no
     container_name: "demo_refugee_questionnaire_bot"
+    nextcloud_login: "user"
+    nextcloud_password: "password"
+    nextcloud_url: "nextcloud.example.com"
+    nextcloud_deck_index: 0
 
 docker_pull_registy: "index.docker.io"
 docker_registry_username: "username"

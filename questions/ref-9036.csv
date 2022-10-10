@@ -1,4 +1,4 @@
-﻿Text;Group;IsGroupSwitch;DuplicateCheck;Category;ValidationRegex;AutopassMode
+Text;Group;IsGroupSwitch;DuplicateCheck;Category;ValidationRegex;AutopassMode
 ФИО (можно псевдоним), либо ник, по которому Вас узнают волонтёры;0;0;1;;^[а-яА-Яa-zA-ZёЁ\-]+ ?[а-яА-Яa-zA-ZёЁ\-]* ?[а-яА-Яa-zA-ZёЁ\-]*$;0
 "Вы уже заполняли заявку через этого бота? (Да/Нет)
 Если да - заполняйте только новые (или повторившиеся) потребности, не дублируя то, что было в прошлых заявках";0;0;0;;;2
