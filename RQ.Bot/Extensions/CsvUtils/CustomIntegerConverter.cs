@@ -37,6 +37,6 @@ public class CustomStringArrayConverter : DefaultTypeConverter
             return default;
         }
 
-        return text.Trim().Split(',');
+        return text.Trim().Split('|');
     }
 }

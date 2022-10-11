@@ -2,7 +2,14 @@
 
 public class Questionnaire
 {
-    public IList<QuestionnaireEntry> Entries { get; set; } // = Array.Empty<QuestionnaireEntry>();
-    public IList<QuestionnaireEntry> Headliners { get; set; } // = Array.Empty<QuestionnaireEntry>();
-    public IList<QuestionnaireEntry> Finishers { get; set; } // = Array.Empty<QuestionnaireEntry>();
+    public IList<QuestionnaireEntry> Entries { get; }
+    public IList<QuestionnaireEntry> Headliners { get; }
+    public IList<QuestionnaireEntry> Finishers { get; }
+
+    public Questionnaire()
+    {
+        Entries = new List<QuestionnaireEntry>();
+        Headliners = new List<QuestionnaireEntry>();
+        Finishers = new List<QuestionnaireEntry>();
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Bot.Repo;
+using Newtonsoft.Json;
 using RQ.Bot.Domain;
 using RQ.Bot.Domain.Enum;
 using RQ.Bot.Integrations;
@@ -134,6 +135,7 @@ public class EntryQuestionnaire
             }
         }
     }
+            record CallbackData(BotResponseType ResponseType, string Response);
 
     /// <summary>
     /// Отправить текстовое сообщение.
@@ -148,12 +150,16 @@ public class EntryQuestionnaire
         if (entry.PossibleResponses.Any())
         {
             var buttons = entry.PossibleResponses
-                .Select(response => new KeyboardButton(response));
+                .Select(response =>
+                {
+                    var callbackData = new CallbackData(BotResponseType.PossibleResponses, response);
+                    
+                    var button = InlineKeyboardButton.WithCallbackData(response, JsonConvert.SerializeObject(callbackData));
+                    return button;
+                });
 
-            var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons)
-            {
-                ResizeKeyboard = true
-            };
+
+            var replyKeyboardMarkup = new InlineKeyboardMarkup(buttons);
 
             await _botClient.SendTextMessageAsync(chatId, entry.Text, replyMarkup: replyKeyboardMarkup);
         }

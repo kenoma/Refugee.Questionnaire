@@ -55,5 +55,5 @@ public class QuestionnaireEntry
     /// <summary>
     /// Варианты ответа.
     /// </summary>
-    public IEnumerable<string> PossibleResponses { get; set; }
+    public string[] PossibleResponses { get; set; }
 }

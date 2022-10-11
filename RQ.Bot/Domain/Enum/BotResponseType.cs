@@ -15,5 +15,6 @@ public enum BotResponseType
     QRem,
     QFinish,
     QReturn,
-    FillRequest
+    FillRequest,
+    PossibleResponses
 }
