@@ -152,9 +152,9 @@ public class EntryQuestionnaire
             var buttons = entry.PossibleResponses
                 .Select(response =>
                 {
-                    var callbackData = new CallbackData(BotResponseType.PossibleResponses, response);
+                    var callbackData = BotResponse.Create(BotResponseType.PossibleResponses, response);
                     
-                    var button = InlineKeyboardButton.WithCallbackData(response, JsonConvert.SerializeObject(callbackData));
+                    var button = InlineKeyboardButton.WithCallbackData(response, callbackData);
                     return button;
                 });
 
