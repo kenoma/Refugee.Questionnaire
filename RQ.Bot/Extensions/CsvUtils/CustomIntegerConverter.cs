@@ -34,7 +34,7 @@ public class CustomStringArrayConverter : DefaultTypeConverter
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return default;
+            return Array.Empty<string>();
         }
 
         return text.Trim().Split('|');

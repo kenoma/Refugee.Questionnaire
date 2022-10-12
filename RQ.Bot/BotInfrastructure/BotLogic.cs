@@ -254,6 +254,10 @@ namespace RQ.Bot.BotInfrastructure
                             bool.Parse(responce.P));
                         break;
                     
+                    case BotResponseType.PossibleResponses:
+                        await _entryQuestionnaire.TryProcessStateMachineAsync(messageChat, user.Id, responce.P);
+                        break;
+
                     case BotResponseType.None:
                         _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;
