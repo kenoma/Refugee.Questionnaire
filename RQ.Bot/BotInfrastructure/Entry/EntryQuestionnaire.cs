@@ -1,8 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using Bot.Repo;
+using Newtonsoft.Json;
+using RQ.Bot.Domain;
+using RQ.Bot.Domain.Enum;
 using RQ.Bot.Integrations;
 using RQ.DTO;
-using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -125,17 +127,50 @@ public class EntryQuestionnaire
             }
         }
     }
+            record CallbackData(BotResponseType ResponseType, string Response);
+
+    /// <summary>
+    /// Отправить текстовое сообщение.
+    /// <remarks>
+    /// Если текстовое сообщение содержит варианты ответов, то они также будут отрисованны.
+    /// </remarks>
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="entry">Вопрос.</param>
+    private async Task SendTextMessage(ChatId chatId, QuestionnaireEntry entry)
+    {
+        if (entry.PossibleResponses.Any())
+        {
+            var buttons = entry.PossibleResponses
+                .Select(response =>
+                {
+                    var callbackData = BotResponse.Create(BotResponseType.PossibleResponses, response);
+                    
+                    var button = InlineKeyboardButton.WithCallbackData(response, callbackData);
+                    return button;
+                });
+
+
+            var replyKeyboardMarkup = new InlineKeyboardMarkup(buttons);
+
+            await _botClient.SendTextMessageAsync(chatId, entry.Text, replyMarkup: replyKeyboardMarkup);
+        }
+        else
+        {
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                parseMode: ParseMode.Markdown,
+                text: entry.Text,
+                disableWebPagePreview: false
+            );
+        }
+    }
 
     private async Task SendQuestMessageToUser(ChatId chatId, QuestionnaireEntry questEntry)
     {
         if (string.IsNullOrEmpty(questEntry.Attachment))
         {
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                parseMode: ParseMode.Markdown,
-                text: questEntry.Text,
-                disableWebPagePreview: false
-            );
+            await SendTextMessage(chatId, questEntry);
         }
         else
         {
@@ -279,22 +314,23 @@ public class EntryQuestionnaire
             var buttons = menu
                 .Select(z => new[]
                 {
-                    InlineKeyboardButton.WithCallbackData(z!, BotResponce.Create(BotResponceType.QMove, z)),
+                    InlineKeyboardButton.WithCallbackData(z!, BotResponse.Create(BotResponseType.QMove, z)),
                 }).ToList();
 
             buttons.AddRange(itemsToRemove.Select(z =>
             {
                 return new[]
                 {
-                    InlineKeyboardButton.WithCallbackData($"Сбросить ответы: {z}",
-                        BotResponce.Create(BotResponceType.QRem, z))
+                    InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}",
+                        BotResponse.Create(BotResponseType.QRem, z))
+
                 };
             }));
             
             buttons.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Завершить", BotResponce.Create(BotResponceType.QFinish)),
-                InlineKeyboardButton.WithCallbackData("Обратно", BotResponce.Create(BotResponceType.QReturn)),
+                InlineKeyboardButton.WithCallbackData("Завершить", BotResponse.Create(BotResponseType.QFinish)),
+                InlineKeyboardButton.WithCallbackData("Обратно", BotResponse.Create(BotResponseType.QReturn)),
             });
 
             try

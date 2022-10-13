@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
-using RQ.DTO;
+using RQ.Bot.Domain;
 
 try
 {
