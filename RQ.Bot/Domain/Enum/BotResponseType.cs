@@ -1,6 +1,6 @@
-namespace RQ.DTO.Enum;
+namespace RQ.Bot.Domain.Enum;
 
-public enum BotResponceType
+public enum BotResponseType
 {
     None = 0,
     CurrentXlsx,
@@ -15,5 +15,6 @@ public enum BotResponceType
     QRem,
     QFinish,
     QReturn,
-    FillRequest
+    FillRequest,
+    PossibleResponses
 }

@@ -1,13 +1,12 @@
 ﻿using Bot.Repo;
-using RQ.Bot.BotInfrastructure.Entry;
+using RQ.Bot.Domain.Enum;
 using RQ.DTO;
-using RQ.DTO.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace RQ.Bot.BotInfrastructure.Entries;
+namespace RQ.Bot.BotInfrastructure.Entry;
 
 internal class EntryAdmin
 {
@@ -41,27 +40,27 @@ internal class EntryAdmin
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Текущие заявки в xlsx",
-                        BotResponce.Create(BotResponceType.CurrentXlsx)),
+                        BotResponse.Create(BotResponseType.CurrentXlsx)),
                     InlineKeyboardButton.WithCallbackData("Все заявки в xlsx",
-                        BotResponce.Create(BotResponceType.AllXlsx)),
+                        BotResponse.Create(BotResponseType.AllXlsx)),
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Текущие заявки в csv",
-                        BotResponce.Create(BotResponceType.CurrentCsv)),
+                        BotResponse.Create(BotResponseType.CurrentCsv)),
                     InlineKeyboardButton.WithCallbackData("Все заявки в csv",
-                        BotResponce.Create(BotResponceType.AllCsv)),
+                        BotResponse.Create(BotResponseType.AllCsv)),
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Архивировать текущие заявки",
-                        BotResponce.Create(BotResponceType.Archive))
+                        BotResponse.Create(BotResponseType.Archive))
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
                         $"Уведомления о новых анкетах:{(rfUser.IsNotificationsOn ? "ВКЛ" : "ВЫКЛ")}",
-                        BotResponce.Create(BotResponceType.SwitchNotifications, !rfUser.IsNotificationsOn))
+                        BotResponse.Create(BotResponseType.SwitchNotifications, !rfUser.IsNotificationsOn))
                 }
             });
 
@@ -71,7 +70,7 @@ internal class EntryAdmin
         }
     }
 
-    public async Task<bool> IsAdmin(ChatId chatId, User user)
+    public Task<bool> IsAdmin(ChatId chatId, User user)
     {
         if (!_repo.TryGetUserById(user.Id, out _))
         {
@@ -86,7 +85,9 @@ internal class EntryAdmin
             });
         }
 
-        return _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdministrator;
+        var isAdministrator = _repo.TryGetUserById(user.Id, out var rfUser) && rfUser.IsAdministrator;
+        
+        return Task.FromResult(isAdministrator);
     }
     
     public async Task ArchiveAsync(ChatId chatId, User user)
@@ -194,7 +195,7 @@ internal class EntryAdmin
         var adminList = _repo.GetAdminUsers();
 
         var promotedUsers = InlineKeyboardButton.WithCallbackData($"Ответить пользователю",
-            BotResponce.Create(BotResponceType.ReplyToUser, userData.UserId));
+            BotResponse.Create(BotResponseType.ReplyToUser, userData.UserId));
 
         var inlineKeyboard = new InlineKeyboardMarkup(promotedUsers);
 
@@ -224,7 +225,7 @@ internal class EntryAdmin
 
         var inlineKeyboard = new InlineKeyboardMarkup(new[]
         {
-            InlineKeyboardButton.WithCallbackData("Ответить", BotResponce.Create(BotResponceType.MessageToAdmins)),
+            InlineKeyboardButton.WithCallbackData("Ответить", BotResponse.Create(BotResponseType.MessageToAdmins)),
         });
 
         await SendMessageToUser(targetUser, messageText, inlineKeyboard);
