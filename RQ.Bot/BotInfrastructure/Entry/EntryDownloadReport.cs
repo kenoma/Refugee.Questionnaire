@@ -237,6 +237,7 @@ public class EntryDownloadCsv
             if (users.TryGetValue(refRequest.UserId, out var user))
             {
                 record.TryAdd("Telegram", $"@{user.Username}");
+                record.TryAdd("Telegram ID", $"{user.UserId}");
             }
 
             foreach (var answ in refRequest.Answers)
