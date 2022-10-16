@@ -1,5 +1,4 @@
 ﻿using RQ.Bot.BotInfrastructure;
-using RQ.Bot.BotInfrastructure.Entries;
 using RQ.Bot.BotInfrastructure.Entry;
 using RQ.Bot.Service;
 using Telegram.Bot;

@@ -1,8 +1,7 @@
 ﻿using System.Text;
 using Prometheus;
-using RQ.Bot.BotInfrastructure.Entries;
 using RQ.Bot.BotInfrastructure.Entry;
-using RQ.DTO.Enum;
+using RQ.Bot.Domain.Enum;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
@@ -166,9 +165,9 @@ namespace RQ.Bot.BotInfrastructure
 
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponce.Create(BotResponceType.FillRequest)),
+                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponse.Create(BotResponseType.FillRequest)),
                 InlineKeyboardButton.WithCallbackData("Написать администраторам",
-                    BotResponce.Create(BotResponceType.MessageToAdmins)),
+                    BotResponse.Create(BotResponseType.MessageToAdmins)),
             });
 
             await _bot.SendTextMessageAsync(
@@ -192,7 +191,7 @@ namespace RQ.Bot.BotInfrastructure
                 
                 var user = callbackQuery.From;
 
-                var responce = BotResponce.FromString(callbackQuery.Data!);
+                var responce = BotResponse.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
 
@@ -200,62 +199,66 @@ namespace RQ.Bot.BotInfrastructure
                 
                 switch (responce.E)
                 {
-                    case BotResponceType.FillRequest:
+                    case BotResponseType.FillRequest:
                         await _entryQuestionnaire.FillLatestRequestAsync(messageChat, user);
                         break;
 
-                    case BotResponceType.CurrentCsv:
+                    case BotResponseType.CurrentCsv:
                         await _entryDownloadCsv.GetRequestsInCsvAsync(messageChat, false, user);
                         break;
 
-                    case BotResponceType.AllCsv:
+                    case BotResponseType.AllCsv:
                         await _entryDownloadCsv.GetRequestsInCsvAsync(messageChat, true, user);
                         break;
 
-                    case BotResponceType.CurrentXlsx:
+                    case BotResponseType.CurrentXlsx:
                         await _entryDownloadCsv.GetRequestsInXlsxAsync(messageChat, false, user);
                         break;
 
-                    case BotResponceType.AllXlsx:
+                    case BotResponseType.AllXlsx:
                         await _entryDownloadCsv.GetRequestsInXlsxAsync(messageChat, true, user);
                         break;
 
-                    case BotResponceType.Archive:
+                    case BotResponseType.Archive:
                         await _entryAdmin.ArchiveAsync(messageChat, user);
                         break;
 
-                    case BotResponceType.QFinish:
+                    case BotResponseType.QFinish:
                         await _entryQuestionnaire.CompleteAsync(messageChat, user.Id);
                         break;
 
-                    case BotResponceType.QReturn:
+                    case BotResponseType.QReturn:
                         await _entryQuestionnaire.ReturnToRootAsync(messageChat, user.Id);
                         break;
 
-                    case BotResponceType.QMove:
+                    case BotResponseType.QMove:
                         await _entryQuestionnaire.MoveMenuAsync(messageChat, user, responce.P);
                         break;
 
-                    case BotResponceType.QRem:
+                    case BotResponseType.QRem:
                         await _entryQuestionnaire.RemoveAnswersForCategoryAsync(messageChat, user,
                             responce.P);
                         break;
 
-                    case BotResponceType.MessageToAdmins:
+                    case BotResponseType.MessageToAdmins:
                         await _entryAdmin.WaitForMessageToAdminsAsync(messageChat, user);
                         break;
 
-                    case BotResponceType.ReplyToUser:
+                    case BotResponseType.ReplyToUser:
                         await _entryAdmin.WaitForMessageToUsersAsync(messageChat, user,
                             long.Parse(responce.P));
                         break;
 
-                    case BotResponceType.SwitchNotifications:
+                    case BotResponseType.SwitchNotifications:
                         await _entryAdmin.SwitchNotificationsToUserAsync(messageChat, user,
                             bool.Parse(responce.P));
                         break;
                     
-                    case BotResponceType.None:
+                    case BotResponseType.PossibleResponses:
+                        await _entryQuestionnaire.TryProcessStateMachineAsync(messageChat, user.Id, responce.P);
+                        break;
+
+                    case BotResponseType.None:
                         _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;
                     

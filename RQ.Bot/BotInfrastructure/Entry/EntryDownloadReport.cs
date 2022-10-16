@@ -5,6 +5,7 @@ using Bot.Repo;
 using CsvHelper;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using RQ.Bot.Domain;
 using RQ.DTO;
 using Telegram.Bot;
 using Telegram.Bot.Types;
