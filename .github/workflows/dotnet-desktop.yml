@@ -79,9 +79,9 @@ jobs:
     
     - name: build
       run: |
-        dotnet restore RQ.Bot.csproj
-        dotnet build RQ.Bot.csproj -c Release -o /build/app
-        dotnet publish RQ.Bot.csproj -c Release -o /build/app
+        dotnet restore RQ.Bot/RQ.Bot.csproj
+        dotnet build RQ.Bot/RQ.Bot.csproj -c Release -o /build/app
+        dotnet publish RQ.Bot/RQ.Bot.csproj -c Release -o /build/app
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
