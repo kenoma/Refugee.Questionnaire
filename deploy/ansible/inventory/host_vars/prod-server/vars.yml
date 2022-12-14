@@ -157,7 +157,7 @@ questionnaire_bot_instances:
     nextcloud_deck_index: 21
     working_directory: "/opt/questionnaire-bot/instances/9531"
     telegram_token: "{{ vault_questionnaire_bot_9531_telegram_token }}"
-    telegram_admin_id: "{{ vault_questionnaire_bot_9531_telegram_admin_id }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9231_telegram_admin_id }}"
     quest_container_path: "/app/questions/ref-9531-oskol.csv"
     enabled: yes
     container_name: "school_StariyOskol_bot"
