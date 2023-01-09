@@ -33,7 +33,7 @@ questionnaire_bot_instances:
     working_directory: "/opt/questionnaire-bot/instances/9031"
     telegram_token: "{{ vault_questionnaire_bot_9031_telegram_token }}"
     telegram_admin_id: "{{ vault_questionnaire_bot_9031_telegram_admin_id }}"
-    quest_container_path: "/app/questions/ny-placeholder.csv"
+    quest_container_path: "/app/questions/ref-9031.csv"
     memory_limit: "512M"
     cpus_limit: "0.75"
     enabled: yes
