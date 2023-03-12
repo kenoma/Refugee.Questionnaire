@@ -17,7 +17,7 @@ public class QuestionnaireEntry
     /// <summary>
     /// Проверка на дубль похожих ответов при генерации ответов
     /// </summary>
-    public byte DuplicateCheck { get; set; } = 0;
+    public bool DuplicateCheck { get; set; } = false;
 
     /// <summary>
     /// Категория вопроса (для генерации меню с кнопками)
@@ -32,7 +32,7 @@ public class QuestionnaireEntry
     /// <summary>
     /// Является ли вопрос главным для группы?  (отрицательный ответ пропускает группу)
     /// </summary>
-    public byte IsGroupSwitch { get; set; } = 0;
+    public bool IsGroupSwitch { get; set; } = false;
 
     /// <summary>
     /// Сообщения, которые выводятся автоматически, без подтверждения пользователем.

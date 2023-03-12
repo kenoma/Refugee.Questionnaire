@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Prometheus;
+﻿using Prometheus;
 using RQ.Bot.BotInfrastructure.Entry;
 using RQ.Bot.Domain.Enum;
 using Telegram.Bot;
@@ -150,22 +149,18 @@ namespace RQ.Bot.BotInfrastructure
             if (msg == null)
                 return;
 
-            var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
             var requests = _entryQuestionnaire.GetAllUserRequest(msg.From!);
 
-            var usage = new StringBuilder(
-                    $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n")
-                .AppendLine($"Вы заполнили {requests.Length} заявок\r\n")
-                .AppendLine($"Последние 10:\r\n")
-                .AppendJoin("\r\n",
-                    requests.Take(10).Select(z =>
-                        $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
-                .AppendLine("\r\n`------------------------------------------`\r\n")
-                .ToString();
+            var refRequest = requests.MaxBy(z => z.TimeStamp);
+            
+            var questReview = refRequest == null
+                ? "Вы еще не заполнили анкету"
+                : $"Текущая анкета:\r\n{string.Join("\r\n", refRequest!.Answers.Where(z=>z.Answer!= "✓").Select(z => $"`{z.Question.Replace("`", "").PadRight(30)[..30]}|\t`{z.Answer}"))}";
 
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponse.Create(BotResponseType.FillRequest)),
+                InlineKeyboardButton.WithCallbackData(refRequest == null ? "Заполнить анкету" : "Перезаполнить анкету",
+                    BotResponse.Create(BotResponseType.FillRequest)),
                 InlineKeyboardButton.WithCallbackData("Написать администраторам",
                     BotResponse.Create(BotResponseType.MessageToAdmins)),
             });
@@ -173,7 +168,7 @@ namespace RQ.Bot.BotInfrastructure
             await _bot.SendTextMessageAsync(
                 chatId: msg.Chat.Id,
                 parseMode: ParseMode.Markdown,
-                text: usage,
+                text: questReview,
                 replyMarkup: inlineKeyboard,
                 disableWebPagePreview: false
             );
@@ -185,18 +180,17 @@ namespace RQ.Bot.BotInfrastructure
             try
             {
                 var messageChat = callbackQuery.Message?.Chat;
-                
-                if(messageChat is null)
+
+                if (messageChat is null)
                     return;
-                
+
                 var user = callbackQuery.From;
 
                 var responce = BotResponse.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
 
-                
-                
+
                 switch (responce.E)
                 {
                     case BotResponseType.FillRequest:
@@ -253,7 +247,7 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryAdmin.SwitchNotificationsToUserAsync(messageChat, user,
                             bool.Parse(responce.P));
                         break;
-                    
+
                     case BotResponseType.PossibleResponses:
                         await _entryQuestionnaire.TryProcessStateMachineAsync(messageChat, user.Id, responce.P);
                         break;
@@ -261,7 +255,7 @@ namespace RQ.Bot.BotInfrastructure
                     case BotResponseType.None:
                         _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;
-                    
+
                     default:
                         _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;

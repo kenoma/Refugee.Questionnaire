@@ -6,8 +6,7 @@ var builder = WebApplication
     .Configure(args)
     .UseLiteDbDatabase()
     .UseTelegramBot()
-    .UseQuestionnaire()
-    .UseNextcloud();
+    .UseQuestionnaire();
 
 var app = builder.Build();
 
