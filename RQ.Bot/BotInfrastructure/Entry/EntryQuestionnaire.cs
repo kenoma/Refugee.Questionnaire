@@ -118,7 +118,7 @@ public class EntryQuestionnaire
             if (unanswered == null)
             {
                 _repo.UpdateRefRequest(refRequest);
-                
+
                 await ReturnToRootAsync(chatId, refRequest.UserId);
             }
             else
@@ -127,7 +127,8 @@ public class EntryQuestionnaire
             }
         }
     }
-            record CallbackData(BotResponseType ResponseType, string Response);
+
+    record CallbackData(BotResponseType ResponseType, string Response);
 
     /// <summary>
     /// Отправить текстовое сообщение.
@@ -145,9 +146,9 @@ public class EntryQuestionnaire
                 .Select(response =>
                 {
                     var callbackData = BotResponse.Create(BotResponseType.PossibleResponses, response);
-                    
+
                     var button = InlineKeyboardButton.WithCallbackData(response, callbackData);
-                    return button;
+                    return new[] { button };
                 });
 
 
@@ -323,10 +324,9 @@ public class EntryQuestionnaire
                 {
                     InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}",
                         BotResponse.Create(BotResponseType.QRem, z))
-
                 };
             }));
-            
+
             buttons.Add(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Завершить", BotResponse.Create(BotResponseType.QFinish)),
@@ -436,7 +436,7 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(refRequest);
         _logger.LogInformation("Ref request {RefId} backed to root {UserId}", refRequest.Id, userId);
-        
+
         await TryProcessStateMachineAsync(messageChat, userId, string.Empty);
     }
 
