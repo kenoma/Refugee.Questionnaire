@@ -90,7 +90,7 @@ namespace RQ.Bot.BotInfrastructure
             var user = message?.From;
             if (user == null)
                 return;
-
+            
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
             await _entryAdmin.CreateIfNotExistUser(message.Chat.Id, user);
 
@@ -150,30 +150,29 @@ namespace RQ.Bot.BotInfrastructure
             if (msg == null)
                 return;
 
-            var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
-            var requests = _entryQuestionnaire.GetAllUserRequest(msg.From!);
-
-            var usage = new StringBuilder(
-                    $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n")
-                .AppendLine($"Вы заполнили {requests.Length} заявок\r\n")
-                .AppendLine($"Последние 10:\r\n")
-                .AppendJoin("\r\n",
-                    requests.Take(10).Select(z =>
-                        $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
-                .AppendLine("\r\n`------------------------------------------`\r\n")
-                .ToString();
+            // var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
+            // var requests = _entryQuestionnaire.GetAllUserRequest(msg.From!);
+            // var usage = new StringBuilder(
+            //         $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n")
+            //     .AppendLine($"Вы заполнили {requests.Length} заявок\r\n")
+            //     .AppendLine($"Последние 10:\r\n")
+            //     .AppendJoin("\r\n",
+            //         requests.Take(10).Select(z =>
+            //             $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
+            //     .AppendLine("\r\n`------------------------------------------`\r\n")
+            //     .ToString();
 
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponse.Create(BotResponseType.FillRequest)),
-                InlineKeyboardButton.WithCallbackData("Написать администраторам",
-                    BotResponse.Create(BotResponseType.MessageToAdmins)),
+                // InlineKeyboardButton.WithCallbackData("Написать администраторам", BotResponse.Create(BotResponseType.MessageToAdmins)),
             });
 
             await _bot.SendTextMessageAsync(
                 chatId: msg.Chat.Id,
                 parseMode: ParseMode.Markdown,
-                text: usage,
+                text:
+                "Вы можете заполнить анкету. Если вы уже заполняли анкету ранее, то они останутся в системе и никуда не денутся.",
                 replyMarkup: inlineKeyboard,
                 disableWebPagePreview: false
             );
@@ -185,18 +184,18 @@ namespace RQ.Bot.BotInfrastructure
             try
             {
                 var messageChat = callbackQuery.Message?.Chat;
-                
-                if(messageChat is null)
+
+                if (messageChat is null)
                     return;
-                
+
                 var user = callbackQuery.From;
+
+                await _bot.EditMessageReplyMarkupAsync(messageChat, callbackQuery.Message.MessageId);
 
                 var responce = BotResponse.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
 
-                
-                
                 switch (responce.E)
                 {
                     case BotResponseType.FillRequest:
@@ -253,15 +252,16 @@ namespace RQ.Bot.BotInfrastructure
                         await _entryAdmin.SwitchNotificationsToUserAsync(messageChat, user,
                             bool.Parse(responce.P));
                         break;
-                    
+
                     case BotResponseType.PossibleResponses:
+                        await _bot.SendTextMessageAsync(messageChat, $">>>>>> *{responce.P}*", ParseMode.Markdown);
                         await _entryQuestionnaire.TryProcessStateMachineAsync(messageChat, user.Id, responce.P);
                         break;
 
                     case BotResponseType.None:
                         _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;
-                    
+
                     default:
                         _logger.LogWarning("Incorrect command received {@RespCommand}", responce);
                         break;
