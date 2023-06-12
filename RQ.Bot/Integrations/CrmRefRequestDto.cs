@@ -1,6 +1,9 @@
 namespace RQ.Bot.Integrations;
 
-public class CrmRefRequestDTO
+/// <summary>
+/// 
+/// </summary>
+public class CrmRefRequestDto
 {
     /// <summary>
     ///     Айди заявки внутри бота
@@ -25,7 +28,7 @@ public class CrmRefRequestDTO
     /// <summary>
     ///     Ответы на вопросы
     /// </summary>
-    public CRMRefRequestEntryDTO[] Answers { get; set; } = Array.Empty<CRMRefRequestEntryDTO>();
+    public CrmRefRequestEntryDto[] Answers { get; set; } = Array.Empty<CrmRefRequestEntryDto>();
 
     /// <summary>
     ///     Признак завершенности заявки (бывают отмененные)
@@ -33,7 +36,10 @@ public class CrmRefRequestDTO
     public bool IsCompleted { get; set; }
 }
 
-public abstract class CRMRefRequestEntryDTO
+/// <summary>
+/// 
+/// </summary>
+public class CrmRefRequestEntryDto
 {
     /// <summary>
     ///     Текст вопроса, на который дан ответ

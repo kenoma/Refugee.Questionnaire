@@ -6,7 +6,8 @@ var builder = WebApplication
     .Configure(args)
     .UseLiteDbDatabase()
     .UseTelegramBot()
-    .UseQuestionnaire();
+    .UseQuestionnaire()
+    .UseCrmIntegration();
 
 var app = builder.Build();
 
