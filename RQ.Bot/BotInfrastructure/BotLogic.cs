@@ -87,7 +87,7 @@ namespace RQ.Bot.BotInfrastructure
         private async Task BotOnMessageReceived(Message message)
         {
             var user = message?.From;
-            if (user == null || string.IsNullOrWhiteSpace(user.Username))
+            if (user == null)
                 return;
 
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
