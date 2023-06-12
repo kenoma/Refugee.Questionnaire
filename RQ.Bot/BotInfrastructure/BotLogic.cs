@@ -89,7 +89,7 @@ namespace RQ.Bot.BotInfrastructure
             var user = message?.From;
             if (user == null)
                 return;
-
+            
             var chatMember = await _bot.GetChatMemberAsync(message.Chat.Id, user.Id);
             await _entryAdmin.CreateIfNotExistUser(message.Chat.Id, user);
 
@@ -148,27 +148,17 @@ namespace RQ.Bot.BotInfrastructure
         {
             if (msg == null)
                 return;
-
-            var requests = _entryQuestionnaire.GetAllUserRequest(msg.From!);
-
-            var refRequest = requests.MaxBy(z => z.TimeStamp);
             
-            var questReview = refRequest == null
-                ? "Вы еще не заполнили анкету"
-                : $"Текущая анкета:\r\n{string.Join("\r\n", refRequest!.Answers.Where(z=>z.Answer!= "✓").Select(z => $"`{z.Question.Replace("`", "").PadRight(30)[..30]}|\t`{z.Answer}"))}";
-
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
-                InlineKeyboardButton.WithCallbackData(refRequest == null ? "Заполнить анкету" : "Перезаполнить анкету",
-                    BotResponse.Create(BotResponseType.FillRequest)),
-                InlineKeyboardButton.WithCallbackData("Написать администраторам",
-                    BotResponse.Create(BotResponseType.MessageToAdmins)),
+                InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponse.Create(BotResponseType.FillRequest)),
             });
 
             await _bot.SendTextMessageAsync(
                 chatId: msg.Chat.Id,
                 parseMode: ParseMode.Markdown,
-                text: questReview,
+                text:
+                "Вы можете заполнить анкету. Если вы уже заполняли анкету ранее, то они останутся в системе и никуда не денутся.",
                 replyMarkup: inlineKeyboard,
                 disableWebPagePreview: false
             );
@@ -186,10 +176,11 @@ namespace RQ.Bot.BotInfrastructure
 
                 var user = callbackQuery.From;
 
+                await _bot.EditMessageReplyMarkupAsync(messageChat, callbackQuery.Message.MessageId);
+
                 var responce = BotResponse.FromString(callbackQuery.Data!);
 
                 _logger.LogInformation("Received callback {Callback}: {Payload}", responce.E, responce.P);
-
 
                 switch (responce.E)
                 {
@@ -249,6 +240,7 @@ namespace RQ.Bot.BotInfrastructure
                         break;
 
                     case BotResponseType.PossibleResponses:
+                        await _bot.SendTextMessageAsync(messageChat, $">>>>>> *{responce.P}*", ParseMode.Markdown);
                         await _entryQuestionnaire.TryProcessStateMachineAsync(messageChat, user.Id, responce.P);
                         break;
 

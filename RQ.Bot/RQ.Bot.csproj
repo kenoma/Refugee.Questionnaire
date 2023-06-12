@@ -32,4 +32,8 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Extensions\CsvUtils\" />
+    </ItemGroup>
+
 </Project>
