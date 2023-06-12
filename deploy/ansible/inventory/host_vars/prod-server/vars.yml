@@ -194,6 +194,17 @@ questionnaire_bot_instances:
     quest_container_path: "/app/questions/ref-9478.csv"
     enabled: yes
     container_name: "mirsklad_ref_questionnaire_bot"
+  - port: 9399
+    nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
+    nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
+    nextcloud_url: "{{ vault_questionnaire_bot_default_nextcloud_url }}"
+    nextcloud_deck_index: 22
+    working_directory: "/opt/questionnaire-bot/instances/9399"
+    telegram_token: "{{ vault_questionnaire_bot_9399_telegram_token }}"
+    telegram_admin_id: "{{ vault_questionnaire_bot_9399_telegram_admin_id }}"
+    quest_container_path: "/app/questions/school-revisited.csv"
+    enabled: yes
+    container_name: "HelpRefugeesMoscowSchool_bot"
   - port: 9999
     nextcloud_login: "{{ vault_questionnaire_bot_default_nextcloud_login }}"
     nextcloud_password: "{{ vault_questionnaire_bot_default_nextcloud_password }}"
