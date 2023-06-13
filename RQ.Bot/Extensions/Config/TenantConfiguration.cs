@@ -44,7 +44,7 @@ public class TenantConfiguration
 
     [JsonProperty("surveyDefId")] public string SurveyDefId { get; set; }
 
-    [JsonProperty("surveyDef")] public SurveyDef SurveyDef { get; set; }
+    [JsonProperty("questionnaire")] public SurveyDef SurveyDef { get; set; }
 
     [JsonProperty("prometheusPort")] public int PrometheusPort { get; set; }
 
@@ -69,7 +69,7 @@ public class SurveyDef
 
     [JsonProperty("isDeleted")] public bool IsDeleted { get; set; }
 
-    [JsonProperty("questions")] public Question[] Questions { get; set; } = Array.Empty<Question>();
+    [JsonProperty("items")] public Question[] Questions { get; set; } = Array.Empty<Question>();
 
     [JsonProperty("id")] public string Id { get; set; }
 }

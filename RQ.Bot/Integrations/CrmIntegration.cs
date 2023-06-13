@@ -56,8 +56,7 @@ public class CrmIntegration : IBotIntegration
         var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
-        var resp = await response.Content.ReadAsStringAsync();
-
-        _logger.LogInformation("Responce {Callback}", resp);
+        //var resp = await response.Content.ReadAsStringAsync();
+        _logger.LogInformation("Responce {Callback}", response.StatusCode);
     }
 }

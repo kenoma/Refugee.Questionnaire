@@ -14,7 +14,7 @@ internal static class CrmIntegrationExtension
             var clientSecret = context.Configuration["clientSecret"];
             var configId = context.Configuration["configId"];
 
-            services.AddTransient(s => new CrmIntegration(apiBaseUrl, clientId, clientSecret, configId,
+            services.AddTransient<IBotIntegration>(s => new CrmIntegration(apiBaseUrl, clientId, clientSecret, configId,
                 s.GetRequiredService<ILogger<CrmIntegration>>()));
         });
         return builder;

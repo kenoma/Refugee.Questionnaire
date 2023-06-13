@@ -25,7 +25,7 @@ public class TenantConfigurationProvider : ConfigurationProvider
         handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
         using var client = new HttpClient(handler);
         client.BaseAddress = new Uri(_apiBaseUrl);
-        
+
         using var request = new HttpRequestMessage(HttpMethod.Get,
             $"/api/help-refugees/bot-configuration/get-config/{_configId}");
         var encoded = Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1")
@@ -33,7 +33,7 @@ public class TenantConfigurationProvider : ConfigurationProvider
         request.Headers.Add("Authorization", $"Basic {encoded}");
         var response = client.Send(request);
         response.EnsureSuccessStatusCode();
-        
+
         var configJson = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         var configDto = JsonConvert.DeserializeObject<TenantConfiguration>(configJson);
 
@@ -42,17 +42,18 @@ public class TenantConfigurationProvider : ConfigurationProvider
 
     private void FillConfigParameters(TenantConfiguration configDto)
     {
-        Set("tenantId", configDto.SurveyDef.TenantId);
-        
+        Set("tenantId", configDto.TenantId);
+
         if (!string.IsNullOrWhiteSpace(configDto.BotToken))
         {
             Set("botToken", configDto.BotToken);
         }
+
         if (!string.IsNullOrWhiteSpace(configDto.DbPath))
         {
             Set("dbPath", configDto.DbPath);
         }
-        
+
         Set("adminID", string.Join(",", configDto.Admins));
         Set("questionnaireRaw", JsonConvert.SerializeObject(configDto.SurveyDef.Questions));
     }
