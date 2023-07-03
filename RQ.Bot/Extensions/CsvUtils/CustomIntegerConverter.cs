@@ -32,11 +32,6 @@ public class CustomStringArrayConverter : DefaultTypeConverter
 {
     public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return Array.Empty<string>();
-        }
-
-        return text.Trim().Split('|');
+        return string.IsNullOrWhiteSpace(text) ? Array.Empty<string>() : text.Trim().Split('|');
     }
 }

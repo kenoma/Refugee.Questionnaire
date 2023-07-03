@@ -118,7 +118,7 @@ public class EntryQuestionnaire
             if (unanswered == null)
             {
                 _repo.UpdateRefRequest(refRequest);
-                
+
                 await ReturnToRootAsync(chatId, refRequest.UserId);
             }
             else
@@ -127,7 +127,8 @@ public class EntryQuestionnaire
             }
         }
     }
-            record CallbackData(BotResponseType ResponseType, string Response);
+
+    record CallbackData(BotResponseType ResponseType, string Response);
 
     /// <summary>
     /// Отправить текстовое сообщение.
@@ -145,15 +146,32 @@ public class EntryQuestionnaire
                 .Select(response =>
                 {
                     var callbackData = BotResponse.Create(BotResponseType.PossibleResponses, response);
-                    
+
                     var button = InlineKeyboardButton.WithCallbackData(response, callbackData);
-                    return button;
+
+                    return new[] { button };
                 });
 
 
             var replyKeyboardMarkup = new InlineKeyboardMarkup(buttons);
-
             await _botClient.SendTextMessageAsync(chatId, entry.Text, replyMarkup: replyKeyboardMarkup);
+
+            // var pollQuestions = entry.PossibleResponses
+            //     .ToArray();
+            // var callbackData = BotResponse.Create(BotResponseType.PossibleResponses, "Ответить");
+            //
+            // var button = InlineKeyboardButton.WithCallbackData("Ответить", callbackData);
+            // var replyKeyboardMarkup = new InlineKeyboardMarkup(button);
+            // await _botClient.SendPollAsync(
+            //     chatId: chatId,
+            //     question:
+            //     entry.Text,
+            //     pollQuestions,
+            //     allowsMultipleAnswers: true,
+            //     isAnonymous: false,
+            //     replyMarkup: replyKeyboardMarkup,
+            //     
+            // );
         }
         else
         {
@@ -246,7 +264,8 @@ public class EntryQuestionnaire
 
         var entry = _questionnaire.Entries.First(z => z.Text == unanswered);
 
-        if (string.IsNullOrWhiteSpace(entry.ValidationRegex) || Regex.IsMatch(messageText, entry.ValidationRegex))
+        if ((string.IsNullOrWhiteSpace(entry.ValidationRegex) || Regex.IsMatch(messageText, entry.ValidationRegex)) &&
+            (entry.PossibleResponses.Length == 0 || entry.PossibleResponses.Contains(messageText)))
         {
             refRequest.Answers = refRequest.Answers.Concat(new[]
             {
@@ -323,10 +342,9 @@ public class EntryQuestionnaire
                 {
                     InlineKeyboardButton.WithCallbackData($"Перезаполнить: {z}",
                         BotResponse.Create(BotResponseType.QRem, z))
-
                 };
             }));
-            
+
             buttons.Add(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Завершить", BotResponse.Create(BotResponseType.QFinish)),
@@ -436,7 +454,7 @@ public class EntryQuestionnaire
 
         _repo.UpdateRefRequest(refRequest);
         _logger.LogInformation("Ref request {RefId} backed to root {UserId}", refRequest.Id, userId);
-        
+
         await TryProcessStateMachineAsync(messageChat, userId, string.Empty);
     }
 
