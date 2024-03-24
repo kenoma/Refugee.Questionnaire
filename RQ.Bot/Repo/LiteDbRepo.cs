@@ -10,6 +10,8 @@ public class LiteDbRepo : IRepository
     public LiteDbRepo(string dbPath)
     {
         _dbPath = dbPath ?? throw new ArgumentNullException(nameof(dbPath));
+        if (!Directory.Exists(_dbPath))
+            Directory.CreateDirectory(_dbPath);
     }
     
     public bool IsKnownToken(string value)

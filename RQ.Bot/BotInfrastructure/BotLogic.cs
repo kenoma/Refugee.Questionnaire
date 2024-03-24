@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Prometheus;
+﻿using Prometheus;
 using RQ.Bot.BotInfrastructure.Entry;
 using RQ.Bot.Domain.Enum;
 using Telegram.Bot;
@@ -149,23 +148,10 @@ namespace RQ.Bot.BotInfrastructure
         {
             if (msg == null)
                 return;
-
-            // var isUserAdmin = await _entryAdmin.IsAdmin(msg.Chat!, msg.From!);
-            // var requests = _entryQuestionnaire.GetAllUserRequest(msg.From!);
-            // var usage = new StringBuilder(
-            //         $"Ваш уровень доступа: {(isUserAdmin ? "*администраторский*" : "пользовательский")}\r\n")
-            //     .AppendLine($"Вы заполнили {requests.Length} заявок\r\n")
-            //     .AppendLine($"Последние 10:\r\n")
-            //     .AppendJoin("\r\n",
-            //         requests.Take(10).Select(z =>
-            //             $"Дата `{z.TimeStamp:dd.MM.yyyy hh:mm}` Статус `{((z.IsCompleted && !z.IsInterrupted) ? "заполнена" : "некорректная (прерванная)")}`"))
-            //     .AppendLine("\r\n`------------------------------------------`\r\n")
-            //     .ToString();
-
+            
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 InlineKeyboardButton.WithCallbackData("Новая анкета", BotResponse.Create(BotResponseType.FillRequest)),
-                // InlineKeyboardButton.WithCallbackData("Написать администраторам", BotResponse.Create(BotResponseType.MessageToAdmins)),
             });
 
             await _bot.SendTextMessageAsync(

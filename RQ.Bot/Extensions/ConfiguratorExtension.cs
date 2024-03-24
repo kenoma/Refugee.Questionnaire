@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging.Console;
+using RQ.Bot.Extensions.Config;
 
 namespace RQ.Bot.Extensions;
 
@@ -14,9 +15,15 @@ public static class ConfiguratorExtension
         {
             configurationBuilder.AddCommandLine(args);
             configurationBuilder.AddEnvironmentVariables();
+            var intermedCofig = configurationBuilder.Build();
+            var apiBaseUrl = intermedCofig["apiBaseUrl"];
+            var clientId = intermedCofig["clientId"];
+            var clientSecret = intermedCofig["clientSecret"];
+            var configId = intermedCofig["configId"];
             
+            configurationBuilder.AddTenantConfiguration(apiBaseUrl, clientId, clientSecret, configId);
         });
-        
+
         builder.Logging.AddSimpleConsole(options =>
         {
             options.IncludeScopes = true;
@@ -24,7 +31,7 @@ public static class ConfiguratorExtension
             options.ColorBehavior = LoggerColorBehavior.Enabled;
             options.TimestampFormat = "dd:MM:yyyy hh:mm:ss ";
         });
-        
+
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -33,7 +40,7 @@ public static class ConfiguratorExtension
             var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
         });
-        
+
         return builder;
     }
 }

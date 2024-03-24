@@ -267,7 +267,7 @@ public class EntryDownloadCsv
             ++col;
 
             var quest = _questionnaire.Entries.FirstOrDefault(z => z.Text == heading);
-            if (quest is not { DuplicateCheck: 1 })
+            if (quest is not { DuplicateCheck: true })
                 continue;
             var vals = new List<string>();
             for (var r = 1; r <= row; r++)

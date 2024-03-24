@@ -1,6 +1,5 @@
 ﻿using System.Text.RegularExpressions;
 using Bot.Repo;
-using Newtonsoft.Json;
 using RQ.Bot.Domain;
 using RQ.Bot.Domain.Enum;
 using RQ.Bot.Integrations;
@@ -155,23 +154,6 @@ public class EntryQuestionnaire
 
             var replyKeyboardMarkup = new InlineKeyboardMarkup(buttons);
             await _botClient.SendTextMessageAsync(chatId, entry.Text, replyMarkup: replyKeyboardMarkup);
-
-            // var pollQuestions = entry.PossibleResponses
-            //     .ToArray();
-            // var callbackData = BotResponse.Create(BotResponseType.PossibleResponses, "Ответить");
-            //
-            // var button = InlineKeyboardButton.WithCallbackData("Ответить", callbackData);
-            // var replyKeyboardMarkup = new InlineKeyboardMarkup(button);
-            // await _botClient.SendPollAsync(
-            //     chatId: chatId,
-            //     question:
-            //     entry.Text,
-            //     pollQuestions,
-            //     allowsMultipleAnswers: true,
-            //     isAnonymous: false,
-            //     replyMarkup: replyKeyboardMarkup,
-            //     
-            // );
         }
         else
         {
@@ -412,7 +394,7 @@ public class EntryQuestionnaire
         if (refRequest.Answers.Any())
         {
             var questReview =
-                $"Анкета:\r\n{string.Join("\r\n", refRequest.Answers.Select(z => $"`{z.Question.PadRight(20).Substring(0, 20)}|\t`{z.Answer}"))}";
+                $"Анкета:\r\n{string.Join("\r\n", refRequest.Answers.Where(z=>z.Answer!= "✓").Select(z => $"`{z.Question.Replace("`", "").PadRight(30)[..30]}|\t`{z.Answer}"))}";
 
             await _botClient.SendTextMessageAsync(
                 chatId: messageChat,
@@ -506,7 +488,7 @@ public class EntryQuestionnaire
 
     private async Task<bool> PollStage(RefRequest refRequest, ChatId chatId)
     {
-        var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch != 0).ToArray();
+        var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch).ToArray();
 
         if (!switches.Any())
             return false;
@@ -541,7 +523,7 @@ public class EntryQuestionnaire
         if (!_repo.TryGetActiveUserRequest(user.Id, out var refRequest))
             return;
 
-        var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch != 0).ToArray();
+        var switches = _questionnaire.Entries.Where(z => z.IsGroupSwitch).ToArray();
 
         var activeSwitches = switches.Select(z => z.Text).Except(refRequest.Answers.Select(z => z.Question)).Take(9)
             .ToArray();

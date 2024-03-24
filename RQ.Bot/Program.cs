@@ -7,7 +7,7 @@ var builder = WebApplication
     .UseLiteDbDatabase()
     .UseTelegramBot()
     .UseQuestionnaire()
-    .UseNextcloud();
+    .UseCrmIntegration();
 
 var app = builder.Build();
 

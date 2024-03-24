@@ -1,9 +1,7 @@
-﻿using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration;
+﻿using Newtonsoft.Json;
 using RQ.Bot.Domain;
 using RQ.Bot.Domain.Enum;
-using RQ.Bot.Extensions.CsvUtils;
+using RQ.Bot.Extensions.Config;
 
 namespace RQ.Bot.Extensions;
 
@@ -13,34 +11,18 @@ public static class QuestionnaireExtension
     {
         builder.Services.AddSingleton(_ =>
         {
-            var pathToQuest = builder.Configuration["pathToQuest"];
+            var rawQuestData = builder.Configuration["questionnaireRaw"];
 
-            if (string.IsNullOrWhiteSpace(pathToQuest))
-                throw new InvalidProgramException("Specify --pathToQuest argument");
+            if (string.IsNullOrWhiteSpace(rawQuestData))
+                throw new InvalidProgramException("Specify --questionnaireRaw argument");
 
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                PrepareHeaderForMatch = args => args.Header.ToLower(),
-                MissingFieldFound = null,
-                IgnoreBlankLines = true,
-                BadDataFound = null,
-                DetectDelimiter = true,
-                DetectDelimiterValues = new[] { ",", ";", "\t" },
-                TrimOptions = TrimOptions.InsideQuotes | TrimOptions.Trim,
-                HeaderValidated = null
-            };
+            var rawQuestItems = JsonConvert.DeserializeObject<Question[]>(rawQuestData);
             
-            using var reader = new StreamReader(pathToQuest);
-            using var csv = new CsvReader(reader, config);
-            csv.Context.RegisterClassMap<QuestionnaireEntryClassMap>();
-            var records = csv.GetRecords<QuestionnaireEntry>();
-
             var questions = new Questionnaire();
 
-            foreach (var record in records)
+            foreach (var rawRecord in rawQuestItems.OrderBy(z=>z.OrderPosition))
             {
-                record.Text = record.Text.Trim();
-                
+                var record = rawRecord.ToQuestionnaireEntry();
                 switch (record.AutopassMode)
                 {
                     case AutopassMode.None or AutopassMode.Simple: 
